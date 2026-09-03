@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "products",
     "cart",
     "addresses",
+    "checkouts",
 
     #packages
     "rest_framework",
