@@ -1,24 +1,30 @@
-# Virtual Environment
-venv/
-env/
-.venv/
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# Django
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
+# Virtual Environment
+venv/
+.venv/
+env/
+.env/
 
 # Environment variables
 .env
 .env.*
+!.env.example
 
-# IDE
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Static / Media
+staticfiles/
+media/
+
+# IDEs
 .vscode/
 .idea/
 
@@ -26,14 +32,32 @@ staticfiles/
 .DS_Store
 Thumbs.db
 
-# Pytest
+# Pytest / Coverage
 .pytest_cache/
-
-# Coverage
 .coverage
 htmlcov/
 
-# Django migrations cache
-*.log
+# Ruff
+.ruff_cache/
 
-db.sqlite3
+# Mypy
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build / Packaging
+build/
+dist/
+*.egg-info/
+
+# Secrets / Certificates
+*.pem
+*.key
+*.crt
+
+# Local configuration
+local_settings.py
+
+# Celery
+celerybeat-schedule

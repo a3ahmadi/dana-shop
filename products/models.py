@@ -39,12 +39,50 @@ class Category(models.Model):
         ordering = ["name"]
 
 
+class Color(models.Model):
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="نام رنگ"
+    )
+
+    hex_code = models.CharField(
+        max_length=7,
+        blank=True,
+        null=True,
+        verbose_name="کد رنگ"
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="فعال"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "رنگ"
+        verbose_name_plural = "رنگ‌ها"
+
+
 class Product(models.Model):
 
     category = models.ForeignKey(
         Category,
         on_delete=models.PROTECT,
         related_name="products"
+    )
+
+    color = models.ManyToManyField(
+        Color,
+        related_name="products",
+        blank=True
     )
 
     name = models.CharField(
