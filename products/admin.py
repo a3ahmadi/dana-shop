@@ -4,6 +4,7 @@ from .models import (
     Category,
     Product,
     ProductImage,
+    Color
 )
 
 
@@ -65,3 +66,6 @@ class ProductImageAdmin(admin.ModelAdmin):
         "product",
         "created_at",
     ]
+
+
+admin.site.register(Color)

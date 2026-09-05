@@ -79,15 +79,13 @@ class Product(models.Model):
         related_name="products"
     )
 
-    color = models.ManyToManyField(
+    colors = models.ManyToManyField(
         Color,
         related_name="products",
-        blank=True
+        verbose_name="رنگ‌ها"
     )
 
-    name = models.CharField(
-        max_length=200
-    )
+    name = models.CharField(max_length=200)
 
     slug = models.SlugField(
         max_length=220,
@@ -95,22 +93,16 @@ class Product(models.Model):
         allow_unicode=True
     )
 
-    description = models.TextField(
-        blank=True
-    )
+    description = models.TextField(blank=True)
 
     price = models.DecimalField(
         max_digits=12,
         decimal_places=0
     )
 
-    discount_percent = models.PositiveSmallIntegerField(
-        default=0
-    )
+    discount_percent = models.PositiveSmallIntegerField(default=0)
 
-    stock = models.PositiveIntegerField(
-        default=0
-    )
+    stock = models.PositiveIntegerField(default=0)
 
     sku = models.CharField(
         max_length=100,
@@ -123,31 +115,20 @@ class Product(models.Model):
         null=True
     )
 
-    is_active = models.BooleanField(
-        default=True
-    )
+    is_active = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
-
-    def __str__(self):
-        return self.name
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def final_price(self):
         if self.discount_percent:
-            discount = (
-                self.price * self.discount_percent / 100
-            )
-
+            discount = self.price * self.discount_percent / 100
             return self.price - discount
-
         return self.price
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         ordering = ["-created_at"]

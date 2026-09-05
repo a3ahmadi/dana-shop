@@ -46,27 +46,11 @@ class CartAddItemView(APIView):
             raise_exception=True
         )
 
-        product_id = serializer.validated_data[
-            "product_id"
-        ]
+        product = serializer.validated_data["product"]
 
-        quantity = serializer.validated_data[
-            "quantity"
-        ]
+        color = serializer.validated_data["color"]
 
-        product = Product.objects.filter(
-            id=product_id,
-            is_active=True
-        ).first()
-
-        if not product:
-
-            return Response(
-                {
-                    "detail": "محصول پیدا نشد."
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
+        quantity = serializer.validated_data["quantity"]
 
         if product.stock < quantity:
 
@@ -83,6 +67,7 @@ class CartAddItemView(APIView):
 
             cart.add(
                 product=product,
+                color=color,
                 quantity=quantity
             )
 
@@ -97,7 +82,7 @@ class CartAddItemView(APIView):
 
         return Response(
             {
-                "message": "محصول به سبد خرید اضافه شد."
+                "message": "محصول با موفقیت به سبد خرید اضافه شد."
             },
             status=status.HTTP_201_CREATED
         )
