@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "addresses",
     "checkouts",
     "orders",
+    "payment",
 
     #packages
     "rest_framework",
@@ -168,6 +169,18 @@ CACHES = {
     }
 }
 
+ZARINPAL_MERCHANT_ID = os.getenv(
+    "ZARINPAL_MERCHANT_ID"
+)
+
+ZARINPAL_CALLBACK_URL = os.getenv(
+    "ZARINPAL_CALLBACK_URL"
+)
+
+ZARINPAL_SANDBOX = os.getenv(
+    "ZARINPAL_SANDBOX",
+    "True"
+).lower() == "true"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
