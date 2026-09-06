@@ -3,6 +3,7 @@ import requests
 from django.conf import settings
 from orders.models import Order
 from .models import Payment
+from cart.cart import Cart
 
 
 @transaction.atomic
@@ -140,3 +141,121 @@ class ZarinpalService:
         response.raise_for_status()
 
         return response.json()
+
+
+@transaction.atomic
+def complete_payment(payment_id, request):
+
+    payment = (
+        Payment.objects
+        .select_for_update()
+        .select_related("order")
+        .get(id=payment_id)
+    )
+
+    # جلوگیری از دوباره پردازش شدن Callback
+    if payment.status == "success":
+        return payment.order, False
+
+    order = (
+        payment.order
+    )
+
+    order = (
+        type(order).objects
+        .select_for_update()
+        .get(id=order.id)
+    )
+
+    # Payment باید مربوط به سفارش در انتظار پرداخت باشد
+    if order.status != "pending":
+        raise ValueError(
+            "این سفارش در وضعیت قابل پرداخت نیست."
+        )
+
+    order_items = (
+        order.items
+        .select_related("product")
+        .all()
+    )
+
+    if not order_items:
+        raise ValueError(
+            "سفارش آیتمی ندارد."
+        )
+
+    # Lock کردن محصولات
+    product_ids = [
+        item.product_id
+        for item in order_items
+    ]
+
+    from products.models import Product
+
+    products = {
+        product.id: product
+        for product in (
+            Product.objects
+            .select_for_update()
+            .filter(id__in=product_ids)
+        )
+    }
+
+    # بررسی موجودی
+    for item in order_items:
+
+        product = products.get(
+            item.product_id
+        )
+
+        if not product:
+            raise ValueError(
+                f"محصول «{item.product_name}» پیدا نشد."
+            )
+
+        if product.stock < item.quantity:
+            raise ValueError(
+                f"موجودی محصول «{item.product_name}» کافی نیست."
+            )
+
+    # کاهش موجودی
+    for item in order_items:
+
+        product = products[item.product_id]
+
+        product.stock -= item.quantity
+
+        product.save(
+            update_fields=[
+                "stock",
+                "updated_at",
+            ]
+        )
+
+    # موفق کردن Payment
+    payment.status = "success"
+
+    payment.save(
+        update_fields=[
+            "status",
+            "updated_at",
+        ]
+    )
+
+    # موفق کردن Order
+    order.status = "paid"
+    order.payment_status = "paid"
+
+    order.save(
+        update_fields=[
+            "status",
+            "payment_status",
+            "updated_at",
+        ]
+    )
+
+    # خالی کردن سبد خرید
+    cart = Cart(request)
+    cart.clear()
+
+    return order, True

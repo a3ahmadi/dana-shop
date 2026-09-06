@@ -10,6 +10,7 @@ from .serializers import CreatePaymentSerializer
 from .services import (
     create_payment,
     ZarinpalService,
+    complete_payment,
 )
 
 
@@ -214,34 +215,27 @@ class PaymentCallbackAPIView(APIView):
 
         ref_id = data.get("ref_id")
 
-        with transaction.atomic():
+        try:
 
-            payment.status = "success"
             payment.ref_id = ref_id
 
             payment.save(
                 update_fields=[
-                    "status",
                     "ref_id",
                     "updated_at",
                 ]
             )
 
-            order = payment.order
-
-            order.status = "paid"
-            order.payment_status = "paid"
-
-            order.save(
-                update_fields=[
-                    "status",
-                    "payment_status",
-                    "updated_at",
-                ]
+            order, completed = complete_payment(
+                payment_id=payment.id,
+                request=request,
             )
 
-        return Response({
-            "detail": "پرداخت با موفقیت تایید شد.",
-            "order_number": order.order_number,
-            "ref_id": ref_id,
-        })
+        except ValueError as error:
+
+            return Response(
+                {
+                    "detail": str(error)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
