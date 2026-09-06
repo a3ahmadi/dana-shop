@@ -1,17 +1,19 @@
 import uuid
-
 from django.db import transaction
-
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from addresses.models import Address
 from cart.cart import Cart
-
 from .models import Order, OrderItem
-from .serializers import CreateOrderSerializer
+from .serializers import (
+    OrderListSerializer,
+    OrderDetailSerializer,
+    CreateOrderSerializer,
+    CancelOrderSerializer,
+)
 
 
 class CreateOrderAPIView(APIView):
@@ -173,6 +175,101 @@ class CreateOrderAPIView(APIView):
                         }
                         for item in order.items.all()
                     ],
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+class OrderListAPIView(generics.ListAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = OrderListSerializer
+
+    def get_queryset(self):
+
+        return (
+            Order.objects
+            .filter(
+                user=self.request.user
+            )
+            .order_by("-created_at")
+        )
+
+
+class OrderDetailAPIView(generics.RetrieveAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = OrderDetailSerializer
+
+    lookup_field = "id"
+
+    def get_queryset(self):
+
+        return (
+            Order.objects
+            .filter(
+                user=self.request.user
+            )
+            .prefetch_related("items")
+        )
+
+
+class CancelOrderAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, id):
+
+        order = (
+            Order.objects
+            .select_for_update()
+            .filter(
+                id=id,
+                user=request.user
+            )
+            .first()
+        )
+
+        if not order:
+            return Response(
+                {
+                    "detail": "سفارش پیدا نشد."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CancelOrderSerializer(
+            data={},
+            context={
+                "order": order
+            }
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        order.status = "cancelled"
+
+        order.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            {
+                "detail": "سفارش با موفقیت لغو شد.",
+                "order": {
+                    "id": order.id,
+                    "order_number": order.order_number,
+                    "status": order.status,
+                    "payment_status": order.payment_status,
                 }
             },
             status=status.HTTP_200_OK
