@@ -203,14 +203,16 @@ def complete_payment(payment_id, request):
 
     # بررسی موجودی
     for item in order_items:
-
-        product = products.get(
-            item.product_id
-        )
+        product = products.get(item.product_id)
 
         if not product:
             raise ValueError(
                 f"محصول «{item.product_name}» پیدا نشد."
+            )
+
+        if not product.is_active:
+            raise ValueError(
+                f"محصول «{item.product_name}» دیگر قابل خرید نیست."
             )
 
         if product.stock < item.quantity:
