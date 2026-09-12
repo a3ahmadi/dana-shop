@@ -1,7 +1,7 @@
 import uuid
 from django.db import transaction
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +13,7 @@ from .serializers import (
     OrderDetailSerializer,
     CreateOrderSerializer,
     CancelOrderSerializer,
+    UpdateOrderStatusSerializer,
 )
 
 
@@ -265,6 +266,66 @@ class CancelOrderAPIView(APIView):
         return Response(
             {
                 "detail": "سفارش با موفقیت لغو شد.",
+                "order": {
+                    "id": order.id,
+                    "order_number": order.order_number,
+                    "status": order.status,
+                    "payment_status": order.payment_status,
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+class UpdateOrderStatusAPIView(APIView):
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    @transaction.atomic
+    def patch(self, request, id):
+
+        order = (
+            Order.objects
+            .select_for_update()
+            .filter(id=id)
+            .first()
+        )
+
+        if not order:
+            return Response(
+                {
+                    "detail": "سفارش پیدا نشد."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = UpdateOrderStatusSerializer(
+            data=request.data,
+            context={
+                "order": order
+            }
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        new_status = serializer.validated_data[
+            "status"
+        ]
+
+        order.status = new_status
+
+        order.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            {
+                "detail": "وضعیت سفارش با موفقیت تغییر کرد.",
                 "order": {
                     "id": order.id,
                     "order_number": order.order_number,

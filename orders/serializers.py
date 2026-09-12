@@ -115,3 +115,51 @@ class CancelOrderSerializer(serializers.Serializer):
             )
 
         return attrs
+
+
+class UpdateOrderStatusSerializer(serializers.Serializer):
+
+    status = serializers.ChoiceField(
+        choices=[
+            "processing",
+            "shipping",
+            "delivered",
+            "cancelled",
+        ]
+    )
+
+    def validate_status(self, value):
+
+        order = self.context["order"]
+
+        current_status = order.status
+
+        allowed_transitions = {
+            "pending": [
+                "cancelled",
+            ],
+            "paid": [
+                "processing",
+            ],
+            "processing": [
+                "shipping",
+            ],
+            "shipping": [
+                "delivered",
+            ],
+            "delivered": [],
+            "cancelled": [],
+        }
+
+        allowed_statuses = allowed_transitions.get(
+            current_status,
+            []
+        )
+
+        if value not in allowed_statuses:
+            raise serializers.ValidationError(
+                f"تغییر وضعیت از «{current_status}» "
+                f"به «{value}» مجاز نیست."
+            )
+
+        return value

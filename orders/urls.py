@@ -5,6 +5,7 @@ from .views import (
     OrderListAPIView,
     OrderDetailAPIView,
     CancelOrderAPIView,
+    UpdateOrderStatusAPIView,
 )
 
 
@@ -31,6 +32,11 @@ urlpatterns = [
         "<int:id>/cancel/",
         CancelOrderAPIView.as_view(),
         name="cancel-order"
+    ),
+    path(
+        "<int:id>/status/",
+        UpdateOrderStatusAPIView.as_view(),
+        name="update-order-status"
     ),
 
 ]
