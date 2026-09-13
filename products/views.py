@@ -15,6 +15,9 @@ from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
 )
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics
+from .filters import ProductFilter
 
 
 class CategoryListAPIView(ListAPIView):
@@ -58,19 +61,38 @@ class CategoryDetailAPIView(RetrieveAPIView):
     )
 
 
-class ProductListAPIView(ListAPIView):
-
+class ProductListAPIView(generics.ListAPIView):
     serializer_class = ProductListSerializer
-    permission_classes = [AllowAny]
-    pagination_class = LimitOffsetPaginations
 
-    queryset = (
-        Product.objects
-        .filter(is_active=True)
-        .select_related(
-            "category"
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+
+    filterset_class = ProductFilter
+
+    search_fields = [
+        "name",
+        "description",
+        "sku",
+    ]
+
+    ordering_fields = [
+        "price",
+        "created_at",
+        "name",
+        "stock",
+    ]
+
+    ordering = [
+        "-created_at"
+    ]
+
+    def get_queryset(self):
+        return Product.objects.filter(
+            is_active=True
         )
-    )
 
 
 class ProductDetailAPIView(RetrieveAPIView):
