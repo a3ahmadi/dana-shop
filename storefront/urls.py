@@ -9,5 +9,6 @@ app_name = "storefront"
 urlpatterns = [
     path("", views.HomeView.as_view(), name="home"),
     path("login/", views.LoginView.as_view(), name="login"),
+    path("products/", views.ProductListPageView.as_view(), name="products"),
 
 ]

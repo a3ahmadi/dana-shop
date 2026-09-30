@@ -6,3 +6,6 @@ class HomeView(TemplateView):
 
 class LoginView(TemplateView):
     template_name = "storefront/pages/login.html"
+
+class ProductListPageView(TemplateView):
+    template_name = "storefront/pages/products.html"
