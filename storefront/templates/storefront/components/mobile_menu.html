@@ -1,0 +1,39 @@
+{% load static %}
+
+<!-- RESPONSIVE MENU -->
+<div id="offcanvas-right"
+     class="offcanvas invisible overflow-y-scroll fixed top-0 start-0 sm:w-100 w-[80%] h-full bg-white dark:bg-[#0d1117] text-gray-900 dark:text-gray-100 border-e border-gray-200 dark:border-gray-800 shadow-xl dark:shadow-[0_0_20px_rgba(0,0,0,0.6)] transform -translate-x-full transition-all duration-300 opacity-0 z-50"
+     role="navigation" aria-labelledby="store-menu-title" aria-modal="true">
+    <div class="border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+        <h2 id="store-menu-title" class="font-bold text-base">دانا شاپ</h2>
+        <button onclick="closeOffcanvas()" class="cursor-pointer" aria-label="بستن منوی فروشگاه">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                 stroke="currentColor" class="size-8 text-gray-700 dark:text-gray-300 hover:text-primary-500 transition-colors">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    <nav class="relative p-3" aria-label="منوی اصلی موبایل">
+        <ul class="space-y-2 text-sm">
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="{% url 'storefront:home' %}" class="block">صفحه اصلی</a>
+            </li>
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="/products/" class="block">محصولات</a>
+            </li>
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="/#categories" class="block">دسته‌بندی‌ها</a>
+            </li>
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="/orders/" class="block">پیگیری سفارش</a>
+            </li>
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="{% url 'storefront:login' %}" class="block">ورود / ثبت نام</a>
+            </li>
+            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                <a href="/#site-footer" class="block">تماس با ما</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+<!-- END RESPONSIVE MENU -->

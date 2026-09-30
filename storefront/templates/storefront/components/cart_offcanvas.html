@@ -1,0 +1,87 @@
+{% load static %}
+
+<!-- CART CANVAS -->
+<div id="offcanvas-left"
+     class="offcanvas invisible fixed top-0 end-0 sm:w-100 w-[80%] h-full bg-white dark:bg-[#0d1117] text-gray-900 dark:text-gray-100 border-s border-gray-200 dark:border-gray-800 shadow-xl dark:shadow-[0_0_20px_rgba(0,0,0,0.6)] transform translate-x-full transition-all duration-300 opacity-0 z-50"
+     role="dialog" aria-labelledby="cart-title" aria-modal="true">
+
+    <!-- Header -->
+    <header class="border-b border-gray-200 dark:border-gray-700 p-3 flex items-center justify-between">
+        <h2 id="cart-title" class="font-bold text-base">سبد خرید شما</h2>
+        <button onclick="closeOffcanvas()" class="cursor-pointer" aria-label="بستن سبد خرید">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                 stroke="currentColor"
+                 class="size-8 text-gray-700 dark:text-gray-300 hover:text-primary-500 transition-colors">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Cart Items -->
+    <main class="relative space-y-4 divide-y divide-gray-200 dark:divide-gray-800 p-3 overflow-y-scroll h-full">
+
+        <!-- Product 1 -->
+        <div class="py-3 last:mb-35">
+            <div class="flex flex-wrap items-center">
+                <div class="text-start w-1/3">
+                    <img class="max-w-full rounded-lg shadow-sm dark:shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                         src="{% static 'storefront/assets/images/product/wach-1.png' %}"
+                         alt="ساعت مچی عقربه‌ای مردانه اینویکتا مدل Automatico Ghost Reserve" loading="lazy">
+                </div>
+
+                <div class="w-2/3 space-y-4 px-2">
+                    <h3 class="font-bold leading-7 text-gray-800 dark:text-gray-100">
+                        <a href="">
+                            ساعت مچی عقربه‌ای مردانه اینویکتا مدل Automatico Ghost Reserve
+                        </a>
+                    </h3>
+
+                    <div class="flex items-center justify-between">
+                        <del class="text-rose-600 dark:text-gray-400 line-through" content="IRR">
+                            <span>5,000,000</span>
+                        </del>
+                        <ins class="no-underline text-xl text-green-600 font-bold dark:text-green-400"
+                             content="2500000">
+                            2,500,000
+                            <span class="text-sm font-normal text-gray-700 dark:text-gray-300">تومان</span>
+                        </ins>
+                    </div>
+
+                    <div class="flex items-end justify-between">
+                        <span>تعداد: 3</span>
+                        <a href="#"
+                           class="bg-red-100 hover:bg-red-200 dark:bg-custom-dark dark:hover:bg-[#1f242c] text-red-800 dark:text-gray-200 border border-transparent dark:border-gray-700 p-2 rounded-lg transition-colors duration-200"
+                           role="button" aria-label="حذف محصول از سبد خرید">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer
+            class="p-3 absolute bottom-0 start-0 end-0 bg-white dark:bg-custom-dark border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+            <div class="space-y-2">
+                <span class="inline-block text-lg">جمع کل</span>
+                <h3 class="font-bold text-xl" content="11000000">
+                    11,000,000 تومان
+                </h3>
+            </div>
+            <div class="text-end">
+                <a href="/checkout"
+                   class="bg-primary dark:bg-primary-500 hover:bg-primary-600 dark:hover:bg-primary-400 text-white py-2 px-4 rounded-lg shadow-sm transition-colors duration-200"
+                   role="button" aria-label="تکمیل فرایند خرید">
+                    تکمیل خرید
+                </a>
+            </div>
+        </div>
+    </footer>
+</div>
+<!-- END CART CANVAS -->

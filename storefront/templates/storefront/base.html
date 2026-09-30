@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}دانا شاپ{% endblock %}</title>
+    <meta name="description"
+          content="فروشگاه اینترنتی دانا شاپ؛ عرضه لوازم‌التحریر و نوشت‌افزار.">
+    <meta name="keywords" content="دانا شاپ, لوازم التحریر, فروشگاه اینترنتی, نوشت افزار">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Dana Shop">
+    <meta name="copyright" content="All rights belong to Dana Shop.">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'storefront/assets/images/favicon_io/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'storefront/assets/images/favicon_io/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'storefront/assets/images/favicon_io/favicon-16x16.png' %}">
+    <link rel="stylesheet" href="{% static 'storefront/assets/js/plugin/swiper/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" href="{% static 'storefront/assets/css/app.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="relative bg-custom-light dark:bg-[#0d1117] text-gray-900 dark:text-gray-100 transition-colors duration-300" >
+
+    {% include "storefront/components/header.html" %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "storefront/components/footer.html" %}
+    {% include "storefront/components/cart_offcanvas.html" %}
+    {% include "storefront/components/mobile_menu.html" %}
+    {% include "storefront/components/mobile_nav.html" %}
+
+    <div class="overlay fixed inset-0 z-40 bg-black/70 hidden transition-opacity duration-300" onclick="closeOffcanvas()" role="presentation" aria-hidden="true"></div>
+
+    <script src="{% static 'storefront/assets/js/plugin/swiper/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'storefront/assets/js/dependencies/swiper-script.js' %}"></script>
+    <script src="{% static 'storefront/assets/js/dependencies/app.js' %}"></script>
+    <script src="{% static 'storefront/js/api.js' %}"></script>
+    <script src="{% static 'storefront/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
