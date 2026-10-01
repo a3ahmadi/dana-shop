@@ -273,7 +273,7 @@
             : "";
 
         return `
-            <div class="swiper-slide !w-40 !h-40">
+            <div class="swiper-slide !size-40">
                 <button type="button"
                         data-category-id="${escapeHtml(category.id ?? "")}"
                         data-category-name="${escapeHtml(category.name ?? "")}"
