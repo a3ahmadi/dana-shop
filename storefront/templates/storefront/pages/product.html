@@ -1,0 +1,136 @@
+{% extends "storefront/base.html" %}
+{% load static %}
+{% block title %}{{ product.name }} | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <nav class="w-full py-3 text-sm text-gray-600 dark:text-gray-400" aria-label="مسیر صفحه">
+      <a href="{% url 'storefront:home' %}" class="hover:text-primary">خانه</a> /
+      <a href="{% url 'storefront:products' %}" class="hover:text-primary">محصولات</a> /
+      <span aria-current="page">{{ product.name }}</span>
+    </nav>
+    <div id="productDetail" data-product-id="{{ product.pk }}" data-stock="{{ product.stock }}"
+         class="bg-white dark:bg-custom-dark dark:text-gray-200 shadow-sm border border-gray-200 dark:border-gray-700 mt-4 rounded-2xl px-4 sm:px-6 py-6">
+      <div class="grid grid-cols-12 gap-6 xl:gap-8 place-items-start">
+        <section class="xl:col-span-4 col-span-12 w-full" aria-label="تصاویر محصول">
+          {% if product.discount_percent %}
+          <div class="bg-secondary-200 dark:bg-zinc-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-2xl flex items-center justify-between mb-4">
+            <span class="font-black text-gray-800 dark:text-gray-100">فروش ویژه</span>
+            <span class="bg-secondary-500 text-white text-xs font-bold px-2 py-1 rounded-xl">{{ product.discount_percent }}٪ تخفیف</span>
+          </div>
+          {% endif %}
+          <div class="bg-primary dark:bg-zinc-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+            <div class="rounded-xl bg-white dark:bg-custom-dark h-72 sm:h-80 flex items-center justify-center overflow-hidden">
+              {% if product.main_image %}
+              <img id="productMainImage" src="{{ product.main_image.url }}" alt="{{ product.name }}" class="max-w-full max-h-full object-contain" fetchpriority="high">
+              {% elif product.images.all %}
+              <img id="productMainImage" src="{{ product.images.all.0.image.url }}" alt="{{ product.name }}" class="max-w-full max-h-full object-contain" fetchpriority="high">
+              {% else %}
+              <span class="text-gray-400 text-sm">تصویری برای این محصول ثبت نشده است.</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if product.main_image or product.images.all %}
+          <div class="flex gap-3 mt-4 overflow-x-auto pb-2" aria-label="انتخاب تصویر">
+            {% if product.main_image %}
+            <button type="button" data-gallery-image="{{ product.main_image.url }}" aria-label="نمایش تصویر اصلی" aria-pressed="true"
+                    class="product-thumbnail shrink-0 w-20 h-20 rounded-lg flex justify-center items-center border border-primary bg-white dark:bg-zinc-800 p-2">
+              <img src="{{ product.main_image.url }}" alt="" class="max-w-full max-h-full object-contain">
+            </button>
+            {% endif %}
+            {% for photo in product.images.all %}
+            <button type="button" data-gallery-image="{{ photo.image.url }}" aria-label="نمایش تصویر {{ forloop.counter }}" aria-pressed="false"
+                    class="product-thumbnail shrink-0 w-20 h-20 rounded-lg flex justify-center items-center border border-gray-300 dark:border-gray-700 bg-white dark:bg-zinc-800 p-2">
+              <img src="{{ photo.image.url }}" alt="" class="max-w-full max-h-full object-contain">
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </section>
+        <section class="xl:col-span-5 col-span-12 w-full">
+          <p class="text-sm text-primary-600 dark:text-primary-400">{{ product.category.name }}</p>
+          <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-9 mt-3">{{ product.name }}</h1>
+          <div class="border-t border-gray-200 dark:border-gray-700 mt-5 pt-5 space-y-4 text-sm">
+            <p><span class="text-gray-500 dark:text-gray-400">شناسه محصول:</span> <span dir="ltr">{{ product.sku }}</span></p>
+            {% if product.stock > 0 %}
+            <p class="text-green-700 dark:text-green-400 font-semibold">موجود در انبار ({{ product.stock }} عدد)</p>
+            {% else %}
+            <p class="text-red-600 dark:text-red-400 font-semibold">ناموجود</p>
+            {% endif %}
+          </div>
+          {% if product.available_colors %}
+          <div class="border-t border-gray-200 dark:border-gray-700 mt-5 pt-5">
+            <h2 class="font-bold text-gray-900 dark:text-white mb-3">انتخاب رنگ</h2>
+            <div class="flex flex-wrap gap-2" role="group" aria-label="رنگ محصول">
+              {% for color in product.available_colors %}
+              <label class="cursor-pointer">
+                <input type="radio" name="product-color" value="{{ color.pk }}" form="addToCartForm" class="sr-only peer" {% if forloop.first %}checked{% endif %}>
+                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 peer-checked:border-primary-500 peer-checked:bg-primary-50">
+                  <span class="size-4 rounded-full border border-gray-300" {% if color.hex_code %}style="background-color: {{ color.hex_code }}"{% endif %}></span>{{ color.name }}
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% if product.description %}
+          <p class="text-sm leading-8 text-gray-600 dark:text-gray-300 mt-6">{{ product.description|truncatechars:220 }}</p>
+          <a href="#productDescription" class="inline-block text-sm text-primary-600 dark:text-primary-400 mt-2">مشاهده توضیحات کامل</a>
+          {% endif %}
+        </section>
+        <section class="xl:col-span-3 col-span-12 w-full" aria-label="خرید محصول">
+          <div class="bg-gray-100/90 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl shadow p-4 sm:p-5 space-y-5">
+            <h2 class="font-bold text-gray-800 dark:text-white">فروشنده</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300">دانا شاپ</p>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-5">
+              {% if product.stock > 0 %}
+              {% if product.discount_percent %}
+              <div class="flex items-center justify-between text-sm">
+                <del class="text-gray-400">{{ product.price|floatformat:"0g" }}</del>
+                <span class="bg-secondary-500 text-white font-bold px-2 py-1 rounded-xl">{{ product.discount_percent }}٪</span>
+              </div>
+              {% endif %}
+              <p class="text-end text-2xl font-black mt-2 text-gray-900 dark:text-white">{{ product.final_price|floatformat:"0g" }} <span class="text-xs font-normal">تومان</span></p>
+              {% else %}
+              <p class="text-center font-bold text-gray-500">این محصول ناموجود است.</p>
+              {% endif %}
+            </div>
+            <form id="addToCartForm" class="space-y-4">
+              {% csrf_token %}
+              <div class="flex items-center justify-between">
+                <label for="productQuantity" class="text-sm font-medium">تعداد</label>
+                <div class="inline-flex items-center border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
+                  <button type="button" id="increaseQuantity" class="size-10 text-lg" aria-label="افزایش تعداد" {% if product.stock == 0 %}disabled{% endif %}>+</button>
+                  <input id="productQuantity" type="number" min="1" max="{{ product.stock }}" value="1" class="w-12 text-center bg-transparent outline-none" aria-label="تعداد محصول" {% if product.stock == 0 %}disabled{% endif %}>
+                  <button type="button" id="decreaseQuantity" class="size-10 text-lg" aria-label="کاهش تعداد" {% if product.stock == 0 %}disabled{% endif %}>−</button>
+                </div>
+              </div>
+              <button id="addToCartButton" type="submit" class="bg-primary hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl px-6 py-4 text-sm w-full"
+                      {% if product.stock == 0 or not product.available_colors %}disabled{% endif %}>افزودن به سبد خرید</button>
+              {% if product.stock > 0 and not product.available_colors %}
+              <p class="text-xs text-amber-700 dark:text-amber-400">برای خرید این محصول هنوز رنگی ثبت نشده است.</p>
+              {% endif %}
+              <p id="addToCartStatus" role="status" aria-live="polite" class="text-sm"></p>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+    <section id="productDescription" class="bg-white dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm mt-6 p-5 sm:p-7">
+      <h2 class="text-xl font-black text-gray-900 dark:text-white pb-4 border-b border-gray-200 dark:border-gray-700">معرفی و مشخصات محصول</h2>
+      <dl class="grid sm:grid-cols-2 gap-4 text-sm mt-5">
+        <div class="bg-gray-100 dark:bg-zinc-800 rounded-lg p-3"><dt class="text-gray-500 dark:text-gray-400">دسته‌بندی</dt><dd class="font-semibold mt-2">{{ product.category.name }}</dd></div>
+        <div class="bg-gray-100 dark:bg-zinc-800 rounded-lg p-3"><dt class="text-gray-500 dark:text-gray-400">شناسه محصول</dt><dd class="font-semibold mt-2" dir="ltr">{{ product.sku }}</dd></div>
+      </dl>
+      {% if product.description %}
+      <div class="mt-6 text-gray-700 dark:text-gray-300 text-sm leading-9 whitespace-pre-line">{{ product.description }}</div>
+      {% else %}
+      <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">توضیحی برای این محصول ثبت نشده است.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'storefront/js/product.js' %}"></script>
+{% endblock %}

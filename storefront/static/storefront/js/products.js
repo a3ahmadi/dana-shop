@@ -384,7 +384,6 @@
                 <span class="font-bold text-sm text-gray-900 dark:text-gray-200 tracking-wider text-left">${toPersianDigits(formatNumber(finalPrice))} <span class="text-[11px] font-normal">تومان</span></span>
             `;
 
-        // Frontend detail page is created in the next stage. Keep the slug ready in data-product-slug.
         return `
             <div class="lg:col-span-3 sm:col-span-6 col-span-12 w-full">
                 <article class="relative h-full dark:border-gray-700 dark:shadow-[0_0_10px_rgba(0,0,0,0.6)] rounded p-3 bg-white dark:bg-custom-dark transition-all duration-200 ease-in-out group border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
@@ -398,7 +397,7 @@
                     ${stockBadge}
                     <div class="mt-3">
                         <h2 class="font-normal text-sm leading-6 h-12 mt-2 px-1 overflow-hidden group-hover:text-primary-600 dark:group-hover:text-primary-400 dark:text-gray-200 text-gray-900 transition-colors duration-200">
-                            <button type="button" data-product-slug="${escapeHtml(product.slug || "")}" class="font-bold text-start line-clamp-2">${escapeHtml(product.name || "بدون نام")}</button>
+                            <a href="/products/${encodeURIComponent(product.slug || "")}/" class="font-bold text-start line-clamp-2">${escapeHtml(product.name || "بدون نام")}</a>
                         </h2>
                         <p class="mt-1 px-1 text-[11px] text-gray-400 line-clamp-1">${escapeHtml(product.category || "")}</p>
                     </div>
