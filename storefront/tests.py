@@ -34,3 +34,32 @@ class ProductDetailPageTests(TestCase):
         self.product.save()
         response = self.client.get(reverse("storefront:product_detail", kwargs={"slug": self.product.slug}))
         self.assertEqual(response.status_code, 404)
+
+class HomePageTests(TestCase):
+    def test_home_mounts_real_catalog_sections(self):
+        response = self.client.get(reverse("storefront:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="homeCategoriesSlides"')
+        self.assertContains(response, 'id="homeLatestSlides"')
+        self.assertContains(response, 'id="catalogSearchInput"')
+        self.assertContains(response, '<form id="catalogSearchForm" method="get" action="/products/"')
+        self.assertContains(response, 'name="search"')
+        self.assertNotContains(response, "Galaxy Tab S8")
+
+    def test_catalog_api_exposes_fields_used_by_home(self):
+        category = Category.objects.create(name="دفتر", slug="notebooks")
+        Product.objects.create(
+            category=category, name="دفتر خط‌دار", slug="lined-notebook",
+            price=20000, discount_percent=5, stock=3, sku="NOTE-2",
+        )
+        categories = self.client.get("/api/v1/categories/?limit=100")
+        products = self.client.get("/api/v1/products/?ordering=-created_at")
+        self.assertEqual(categories.status_code, 200)
+        self.assertEqual(products.status_code, 200)
+        search = self.client.get("/api/v1/products/", {"search": "دفتر"})
+        self.assertEqual(search.status_code, 200)
+        self.assertEqual(search.json()[0]["name"], "دفتر خط‌دار")
+        self.assertEqual(categories.json()["results"][0]["name"], category.name)
+        item = products.json()[0]
+        for field in ("name", "slug", "category", "price", "final_price", "discount_percent", "stock", "main_image"):
+            self.assertIn(field, item)
