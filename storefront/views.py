@@ -1,6 +1,11 @@
 from django.db.models import Prefetch
+from django.http import HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+
 from django.views.generic import DetailView, TemplateView
 
+from accounts.redirects import safe_next_url
 from products.models import Color, Product
 
 
@@ -8,8 +13,14 @@ class HomeView(TemplateView):
     template_name = "storefront/pages/home.html"
 
 
+@method_decorator(never_cache, name="dispatch")
 class LoginView(TemplateView):
     template_name = "storefront/pages/login.html"
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(safe_next_url(request, request.GET.get("next")))
+        return super().get(request, *args, **kwargs)
 
 
 class ProductListPageView(TemplateView):

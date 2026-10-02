@@ -133,10 +133,14 @@ OTP_LENGTH = 6
 OTP_EXPIRATION_SECONDS = 120
 OTP_RESEND_COOLDOWN_SECONDS = 60
 OTP_MAX_ATTEMPTS = 5
+OTP_REQUESTS_PER_IP_HOUR = 10
+OTP_VERIFICATIONS_PER_IP_HOUR = 60
+MELIPAYAMAK_USERNAME = os.getenv("MELIPAYAMAK_USERNAME", "")
+MELIPAYAMAK_PASSWORD = os.getenv("MELIPAYAMAK_PASSWORD", "")
+MELIPAYAMAK_BODY_ID = os.getenv("MELIPAYAMAK_BODY_ID", "")
+LOGIN_URL = "/login/"
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").is_dir() else []
 STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -150,6 +154,7 @@ AUTH_USER_MODEL = "accounts.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
 
     "DEFAULT_FILTER_BACKENDS": (
