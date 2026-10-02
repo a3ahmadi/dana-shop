@@ -6,6 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 
 from accounts.redirects import safe_next_url
+from cart.cart import Cart
 from products.models import Color, Product
 
 
@@ -26,6 +27,22 @@ class LoginView(TemplateView):
 class ProductListPageView(TemplateView):
     template_name = "storefront/pages/products.html"
 
+
+class CartPageView(TemplateView):
+    template_name = "storefront/pages/cart.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cart = Cart(self.request)
+        items = list(cart)
+        context.update({
+            "cart_items": items,
+            "cart_count": sum(item["quantity"] for item in items),
+            "cart_original_price": sum(item["price"] * item["quantity"] for item in items),
+            "cart_discount": sum((item["price"] - item["final_price"]) * item["quantity"] for item in items),
+            "cart_total": sum(item["total"] for item in items),
+        })
+        return context
 
 class ProductDetailPageView(DetailView):
     template_name = "storefront/pages/product.html"

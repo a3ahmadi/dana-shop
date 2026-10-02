@@ -49,6 +49,7 @@ class AddToCartSerializer(serializers.Serializer):
 
 
 class UpdateCartItemSerializer(serializers.Serializer):
+    color_id = serializers.IntegerField(min_value=1)
 
     quantity = serializers.IntegerField(
         min_value=1

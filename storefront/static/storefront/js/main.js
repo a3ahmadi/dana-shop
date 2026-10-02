@@ -106,3 +106,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!form.contains(event.target)) hideResults();
     });
 });
+async function refreshCartCount() {
+    const badges = document.querySelectorAll("[data-cart-count]");
+    if (!badges.length) return;
+    try {
+        const response = await fetch("/api/v1/cart/", {credentials: "same-origin", headers: {Accept: "application/json"}});
+        if (!response.ok) return;
+        const cart = await response.json();
+        const count = new Intl.NumberFormat("fa-IR").format(cart.total_items || 0);
+        badges.forEach(badge => { badge.textContent = count; });
+    } catch (_) {
+        // Keep the last known count if the cart service is temporarily unavailable.
+    }
+}
+window.addEventListener("cart:changed", refreshCartCount);
+document.addEventListener("DOMContentLoaded", refreshCartCount);

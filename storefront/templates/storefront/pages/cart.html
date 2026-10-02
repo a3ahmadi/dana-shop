@@ -1,0 +1,71 @@
+{% extends "storefront/base.html" %}
+{% load static %}
+{% block title %}سبد خرید | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-5" id="cartPage">
+    <div class="container">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex items-baseline justify-between mb-6">
+                        <h1 class="font-black text-lg mb-4 relative pb-4 text-gray-900 dark:text-gray-200 before:absolute before:start-0 before:bottom-0 before:size-2 before:rounded-full before:bg-primary after:absolute after:w-40 after:h-2 after:bottom-0 after:start-4 after:bg-primary after:rounded-lg">سبد خرید</h1>
+                        <span id="cartItemCount" class="text-gray-600 dark:text-gray-400">{{ cart_count }} کالا</span>
+                    </div>
+                    <div class="timeline-horizontal mb-8 flex items-center justify-between">
+                        <div class="timeline-step active flex flex-col items-center text-center">
+                            <div class="timeline-icon bg-primary text-white dark:bg-primary-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437m0 0L6.75 12.75m-1.644-7.478h13.052c.883 0 1.542.83 1.349 1.69l-1.2 5.25a1.35 1.35 0 01-1.312 1.06H6.75m0 0L5.25 6.75m1.5 6a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm10.5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg></div>
+                            <div class="timeline-title dark:text-white">سبد خرید</div>
+                        </div>
+                        <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon dark:bg-gray-700 dark:text-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5m-16.5 6h3m3 0h3m-9 5.25h12a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0021.75 5.25H5.25A2.25 2.25 0 003 7.5v9.75A2.25 2.25 0 005.25 18.75z"/></svg></div><div class="timeline-title dark:text-white">جزئیات سفارش</div></div>
+                        <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon dark:bg-gray-700 dark:text-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="timeline-title dark:text-white">تأیید</div></div>
+                        <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon dark:bg-gray-700 dark:text-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div><div class="timeline-title dark:text-white">تکمیل</div></div>
+                    </div>
+                    <p id="cartStatus" class="text-sm text-red-600 dark:text-red-400 mb-3" role="status" aria-live="polite"></p>
+                    <div id="cartItems" class="space-y-4">
+                        {% for item in cart_items %}
+                        <div class="flex flex-wrap gap-4 dark:bg-zinc-800 bg-custom-light cart-item items-start border border-gray-200 dark:border-gray-700 rounded-xl p-4" data-product-id="{{ item.product.id }}" data-color-id="{{ item.color.id }}" data-quantity="{{ item.quantity }}" data-price="{{ item.price }}" data-final-price="{{ item.final_price }}" data-stock="{{ item.product.stock }}">
+                            <a href="{% url 'storefront:product_detail' item.product.slug %}" class="w-20 h-20 shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                                {% if item.product.main_image %}<img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="max-w-full max-h-full object-contain" loading="lazy">{% else %}<span class="text-xs text-gray-500 text-center">بدون تصویر</span>{% endif %}
+                            </a>
+                            <div class="flex-1 min-w-40 space-y-4">
+                                <h3 class="font-bold text-gray-800 dark:text-white"><a href="{% url 'storefront:product_detail' item.product.slug %}">{{ item.product.name }}</a></h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">رنگ: {{ item.color.name }}</p>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex bg-white dark:bg-zinc-700 items-center border border-gray-300 dark:border-gray-600 rounded-lg">
+                                        <button type="button" data-cart-action="decrease" class="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400" aria-label="کاهش تعداد {{ item.product.name }}" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+                                        <span class="cart-quantity px-3 py-1 text-gray-800 dark:text-white" aria-label="تعداد">{{ item.quantity }}</span>
+                                        <button type="button" data-cart-action="increase" class="w-8 h-8 flex items-center justify-center text-gray-600 dark:text-gray-400" aria-label="افزایش تعداد {{ item.product.name }}" {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                                    </div>
+                                    <button type="button" data-cart-action="delete" class="text-red-500 hover:text-red-700 transition-colors flex items-center" aria-label="حذف {{ item.product.name }} از سبد خرید">حذف</button>
+                                </div>
+                            </div>
+                            <div class="text-end text-gray-700 dark:text-gray-300">
+                                {% if item.product.discount_percent %}<div class="flex items-center gap-2"><del>{{ item.price|floatformat:"0g" }}</del><span class="bg-secondary-500 text-white text-xs font-bold px-2 py-1 rounded-xl">{{ item.product.discount_percent }}٪</span></div>{% endif %}
+                                <div class="text-xl mt-2 font-bold dark:text-white"><span class="cart-line-total">{{ item.total|floatformat:"0g" }}</span> <span class="text-xs">تومان</span></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div id="cartEmpty" class="text-center py-10 text-gray-600 dark:text-gray-300">سبد خرید شما خالی است. <a href="{% url 'storefront:products' %}" class="text-primary-600 font-bold">مشاهده محصولات</a></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-white sticky top-24 dark:bg-custom-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 class="font-black text-lg mb-4 relative pb-4 text-gray-900 dark:text-gray-200 before:absolute before:start-0 before:bottom-0 before:size-2 before:rounded-full before:bg-primary after:absolute after:w-40 after:h-2 after:bottom-0 after:start-4 after:bg-primary after:rounded-lg">خلاصه سفارش</h2>
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">جمع کل:</span><span class="text-gray-800 dark:text-white"><span id="cartOriginalPrice">{{ cart_original_price|floatformat:"0g" }}</span> تومان</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">تخفیف:</span><span class="text-green-600 dark:text-green-400"><span id="cartDiscount">{{ cart_discount|floatformat:"0g" }}</span> تومان</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال:</span><span class="text-gray-800 dark:text-white">در مرحله بعد محاسبه می‌شود</span></div>
+                        <div class="border-t border-gray-300 dark:border-gray-700 pt-3"><div class="flex justify-between"><span class="text-gray-800 dark:text-white font-bold">جمع محصولات:</span><span class="text-gray-800 dark:text-white font-bold text-lg"><span id="cartTotal">{{ cart_total|floatformat:"0g" }}</span> تومان</span></div></div>
+                    </div>
+                    <button type="button" disabled class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg opacity-60 cursor-not-allowed" aria-describedby="checkoutUnavailable">ادامه فرآیند پرداخت</button>
+                    <p id="checkoutUnavailable" class="text-sm text-gray-600 dark:text-gray-400 mt-3">مرحله تسویه‌حساب هنوز در فروشگاه راه‌اندازی نشده است.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'storefront/js/cart.js' %}"></script>{% endblock %}

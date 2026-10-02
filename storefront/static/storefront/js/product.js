@@ -67,6 +67,7 @@
                         ? result.detail
                         : "افزودن محصول به سبد خرید انجام نشد. لطفاً دوباره تلاش کنید.");
                 }
+                window.dispatchEvent(new Event("cart:changed"));
                 status.textContent = result.message || "محصول به سبد خرید اضافه شد.";
                 status.className = "text-sm text-green-700 dark:text-green-400";
             } catch (error) {

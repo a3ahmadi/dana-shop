@@ -27,7 +27,7 @@ class CartView(APIView):
 
         return Response({
             "items": serializer.data,
-            "total_items": cart.count(),
+            "total_items": sum(item["quantity"] for item in items),
             "total_original_price": cart.total_original_price(),
             "total_discount": cart.total_discount(),
             "total_price": cart.total(),
@@ -103,6 +103,7 @@ class CartUpdateItemView(APIView):
         quantity = serializer.validated_data[
             "quantity"
         ]
+        color_id = serializer.validated_data["color_id"]
 
         cart = Cart(request)
 
@@ -110,6 +111,7 @@ class CartUpdateItemView(APIView):
 
             cart.update(
                 product_id=product_id,
+                color_id=color_id,
                 quantity=quantity
             )
 
@@ -144,7 +146,14 @@ class CartDeleteItemView(APIView):
 
         cart = Cart(request)
 
-        if str(product_id) not in cart.cart:
+        try:
+            color_id = int(request.query_params.get("color_id", ""))
+            if color_id < 1:
+                raise ValueError
+        except (TypeError, ValueError):
+            return Response({"color_id": ["شناسه رنگ معتبر لازم است."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        if cart._get_key(product_id, color_id) not in cart.cart:
 
             return Response(
                 {
@@ -153,7 +162,7 @@ class CartDeleteItemView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        cart.delete(product_id)
+        cart.delete(product_id, color_id)
 
         return Response(
             {
