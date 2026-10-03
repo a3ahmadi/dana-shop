@@ -1,0 +1,102 @@
+{% extends "storefront/base.html" %}
+{% load static %}
+{% block title %}جزئیات سفارش | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-5" id="checkoutPage">
+  <div class="container">
+    <form id="checkoutForm" novalidate>
+      {% csrf_token %}
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+          <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-baseline justify-between mb-6">
+              <h1 class="font-black text-lg mb-4 relative pb-4 text-gray-900 dark:text-gray-200 before:absolute before:start-0 before:bottom-0 before:size-2 before:rounded-full before:bg-primary after:absolute after:w-40 after:h-2 after:bottom-0 after:start-4 after:bg-primary after:rounded-lg">جزئیات سفارش</h1>
+              <span class="text-gray-600 dark:text-gray-400">{{ cart_count }} کالا</span>
+            </div>
+            <div class="timeline-horizontal mb-8 flex items-center justify-between" aria-label="مراحل خرید">
+              <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">سبد خرید</div></div>
+              <div class="timeline-step active flex flex-col items-center text-center" aria-current="step"><div class="timeline-icon bg-primary text-white">۲</div><div class="timeline-title">جزئیات سفارش</div></div>
+              <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon">۳</div><div class="timeline-title">تأیید</div></div>
+              <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon">۴</div><div class="timeline-title">تکمیل</div></div>
+            </div>
+
+            <div class="mb-8">
+              <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">اطلاعات شخصی</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label for="checkoutFirstName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام</label><input id="checkoutFirstName" name="first_name" value="{{ profile.first_name }}" maxlength="50" autocomplete="given-name" required class="w-full px-3 py-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200"></div>
+                <div><label for="checkoutLastName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام خانوادگی</label><input id="checkoutLastName" name="last_name" value="{{ profile.last_name }}" maxlength="50" autocomplete="family-name" required class="w-full px-3 py-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-800 dark:text-gray-200"></div>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">شماره موبایل: <span dir="ltr">{{ request.user.phone_number }}</span></p>
+            </div>
+
+            <div class="mb-8">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">آدرس تحویل</h2>
+                <button type="button" id="openAddressModal" class="text-primary-500 hover:text-primary-700 text-sm disabled:opacity-50" {% if addresses|length >= 3 %}disabled title="حداکثر سه آدرس می‌توانید ثبت کنید."{% endif %}>+ افزودن آدرس جدید</button>
+              </div>
+              <div id="savedAddresses" class="space-y-3">
+                {% for address in addresses %}
+                <label class="address-item block border border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-primary-500 transition-all {% if selected_address.id == address.id %}border-primary-500 bg-blue-50 dark:bg-zinc-800{% endif %}" data-city="{{ address.city }}">
+                  <span class="flex items-start gap-3"><input type="radio" name="address_id" value="{{ address.id }}" class="mt-1" {% if selected_address.id == address.id %}checked{% endif %} required><span class="flex-1"><strong class="block text-gray-800 dark:text-white">{{ address.title }} {% if address.is_default %}<span class="text-xs text-primary-600">(پیش‌فرض)</span>{% endif %}</strong><span class="block text-sm text-gray-600 dark:text-gray-300 mt-1">{{ address.recipient_name }} | {{ address.phone }}</span><span class="block text-sm text-gray-600 dark:text-gray-300 mt-1">{{ address.state }}، {{ address.city }}، {{ address.complete_address }}</span><span class="block text-xs text-gray-500 mt-1">کد پستی: {{ address.postal_code }}</span></span></span>
+                </label>
+                {% empty %}<p id="noAddresses" class="text-sm text-gray-600 dark:text-gray-300">آدرسی ذخیره نشده است. یک آدرس جدید بسازید.</p>{% endfor %}
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">روش ارسال</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">هزینهٔ هر دو روش هنگام تحویل پرداخت می‌شود (پس‌کرایه).</p>
+              <div class="space-y-3">
+                <label id="courierOption" class="shipping-method block border border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-primary-500 {% if not courier_available %}hidden{% endif %}" {% if not courier_available %}hidden{% endif %}><span class="flex items-center gap-3"><input type="radio" name="shipping_method" value="courier" {% if shipping_method == 'courier' %}checked{% endif %}><span><strong class="block text-gray-800 dark:text-white">پیک موتوری</strong><span class="block text-sm text-gray-600 dark:text-gray-300">ویژهٔ شهر تهران — پس‌کرایه</span></span></span></label>
+                <label id="tipaxOption" class="shipping-method block border border-gray-300 dark:border-gray-600 rounded-lg p-4 cursor-pointer hover:border-primary-500 {% if not selected_address %}hidden{% endif %}" {% if not selected_address %}hidden{% endif %}><span class="flex items-center gap-3"><input type="radio" name="shipping_method" value="tipax" {% if shipping_method == 'tipax' %}checked{% endif %}><span><strong class="block text-gray-800 dark:text-white">تیپاکس</strong><span class="block text-sm text-gray-600 dark:text-gray-300">ارسال به شهرهای مختلف — پس‌کرایه</span></span></span></label>
+              </div>
+              <p id="shippingHint" class="text-sm text-gray-600 dark:text-gray-400 mt-3" {% if selected_address %}hidden{% endif %}>برای نمایش روش ارسال، آدرس را انتخاب کنید.</p>
+            </div>
+
+            <div>
+              <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">روش پرداخت</h2>
+              <div class="space-y-3">
+                <label class="payment-method block border border-primary-500 rounded-lg p-4 bg-blue-50 dark:bg-zinc-800"><span class="flex items-center gap-3"><input type="radio" name="payment_method" value="online" checked><span><strong class="block text-gray-800 dark:text-white">درگاه پرداخت آنلاین</strong><span class="block text-sm text-gray-600 dark:text-gray-300">پرداخت در مرحلهٔ بعد</span></span></span></label>
+                <div class="payment-method border border-gray-300 dark:border-gray-600 rounded-lg p-4 opacity-60" aria-disabled="true"><strong class="block text-gray-800 dark:text-white">اسنپ‌پی</strong><span class="block text-sm text-gray-600 dark:text-gray-300">هنوز راه‌اندازی نشده است</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-24">
+            <h2 class="font-black text-lg mb-4 relative pb-4 text-gray-900 dark:text-gray-200 before:absolute before:start-0 before:bottom-0 before:size-2 before:rounded-full before:bg-primary after:absolute after:w-40 after:h-2 after:bottom-0 after:start-4 after:bg-primary after:rounded-lg">خلاصه سفارش</h2>
+            <div class="space-y-4 mb-6">
+              {% for item in cart_items %}<div class="flex items-center justify-between gap-3 pb-4 border-b border-gray-200 dark:border-gray-700"><div class="flex items-center gap-3 min-w-0"><div class="w-16 h-16 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center overflow-hidden">{% if item.product.main_image %}<img src="{{ item.product.main_image.url }}" alt="" class="max-w-full max-h-full object-contain">{% endif %}</div><div class="min-w-0"><h3 class="font-medium text-sm text-gray-800 dark:text-gray-200">{{ item.product.name }}</h3><p class="text-xs text-gray-600 dark:text-gray-400">{{ item.quantity }} عدد - {{ item.color.name }}</p></div></div><span class="text-sm font-medium text-gray-800 dark:text-gray-200 shrink-0">{{ item.total|floatformat:"0g" }} تومان</span></div>{% endfor %}
+            </div>
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">جمع کل:</span><span class="text-gray-800 dark:text-gray-200">{{ cart_original_price|floatformat:"0g" }} تومان</span></div>
+              <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">تخفیف:</span><span class="text-green-600 dark:text-green-400">{{ cart_discount|floatformat:"0g" }} تومان</span></div>
+              <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال:</span><span class="text-gray-800 dark:text-gray-200">پس‌کرایه</span></div>
+              <div class="border-t border-gray-300 dark:border-gray-700 pt-3 flex justify-between"><span class="font-bold text-gray-800 dark:text-gray-200">جمع محصولات:</span><span class="font-bold text-lg text-gray-800 dark:text-gray-200">{{ cart_total|floatformat:"0g" }} تومان</span></div>
+            </div>
+            <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800 text-sm"><h3 class="font-medium text-blue-800 dark:text-blue-300 mb-2">جزئیات انتخاب‌ها</h3><p>روش ارسال: <span id="selectedShipping">{% if shipping_method == 'courier' %}پیک موتوری{% elif shipping_method == 'tipax' %}تیپاکس{% else %}پس از انتخاب آدرس{% endif %}</span></p><p class="mt-2">روش پرداخت: درگاه پرداخت آنلاین</p></div>
+            <button id="saveCheckout" type="submit" class="w-full bg-primary hover:bg-primary-600 text-white font-medium py-4 px-4 rounded-lg transition-colors disabled:opacity-50">ثبت اطلاعات و ادامه</button>
+            <p id="checkoutStatus" class="text-sm mt-3 text-gray-600 dark:text-gray-300" role="status" aria-live="polite"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">در این مرحله سفارش یا پرداختی ثبت نمی‌شود.</p>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <dialog id="addressModal" aria-labelledby="addressModalTitle" class="w-full max-w-xl rounded-2xl bg-white dark:bg-custom-dark dark:text-gray-100 p-6 shadow-xl backdrop:bg-black/60">
+      <div class="flex items-center justify-between mb-5"><h2 id="addressModalTitle" class="text-xl font-bold">افزودن آدرس جدید</h2><button id="closeAddressModal" type="button" aria-label="بستن" class="text-2xl">×</button></div>
+      <form id="addressForm" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="addressTitle" class="block text-sm mb-1">عنوان آدرس</label><input id="addressTitle" name="title" maxlength="100" required placeholder="خانه یا محل کار" class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div><div><label for="recipientName" class="block text-sm mb-1">نام گیرنده</label><input id="recipientName" name="recipient_name" maxlength="100" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="addressPhone" class="block text-sm mb-1">موبایل گیرنده</label><input id="addressPhone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div><div><label for="postalCode" class="block text-sm mb-1">کد پستی</label><input id="postalCode" name="postal_code" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="addressState" class="block text-sm mb-1">استان</label><input id="addressState" name="state" maxlength="100" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div><div><label for="addressCity" class="block text-sm mb-1">شهر</label><input id="addressCity" name="city" maxlength="100" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></div></div>
+        <div><label for="completeAddress" class="block text-sm mb-1">آدرس کامل</label><textarea id="completeAddress" name="complete_address" rows="3" required class="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-zinc-800"></textarea></div>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_default" id="addressDefault">ثبت به‌عنوان آدرس پیش‌فرض</label>
+        <p id="addressStatus" class="text-sm text-red-600" role="status" aria-live="polite"></p>
+        <button id="saveAddress" type="submit" class="w-full bg-primary text-white py-3 px-4 rounded-lg disabled:opacity-50">ذخیره آدرس</button>
+      </form>
+    </dialog>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'storefront/js/checkout.js' %}"></script>{% endblock %}

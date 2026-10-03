@@ -60,7 +60,7 @@ class CheckoutAPIView(APIView):
 
             "cart": {
                 "items": cart_items,
-                "total_items": cart.count(),
+                "total_items": sum(item["quantity"] for item in items),
                 "total_original_price": cart.total_original_price(),
                 "total_discount": cart.total_discount(),
                 "total_price": cart.total(),
@@ -120,6 +120,12 @@ class CheckoutAPIView(APIView):
 
         products_price = cart.total()
 
+        request.session["checkout"] = {
+            "address_id": address.id,
+            "shipping_method": shipping_method,
+            "payment_method": serializer.validated_data["payment_method"],
+        }
+
         return Response(
             {
                 "address": {
@@ -139,9 +145,11 @@ class CheckoutAPIView(APIView):
                     "payment": "پس‌کرایه",
                 },
 
+                "payment_method": serializer.validated_data["payment_method"],
+
                 "price": {
                     "products_price": products_price,
-                    "shipping_price": 0,
+                    "shipping_price": None,
                     "total_price": products_price,
                 }
             },

@@ -57,11 +57,10 @@
                     <div class="space-y-3 mb-4">
                         <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">جمع کل:</span><span class="text-gray-800 dark:text-white"><span id="cartOriginalPrice">{{ cart_original_price|floatformat:"0g" }}</span> تومان</span></div>
                         <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">تخفیف:</span><span class="text-green-600 dark:text-green-400"><span id="cartDiscount">{{ cart_discount|floatformat:"0g" }}</span> تومان</span></div>
-                        <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال:</span><span class="text-gray-800 dark:text-white">در مرحله بعد محاسبه می‌شود</span></div>
+                        <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال:</span><span class="text-gray-800 dark:text-white">پس‌کرایه</span></div>
                         <div class="border-t border-gray-300 dark:border-gray-700 pt-3"><div class="flex justify-between"><span class="text-gray-800 dark:text-white font-bold">جمع محصولات:</span><span class="text-gray-800 dark:text-white font-bold text-lg"><span id="cartTotal">{{ cart_total|floatformat:"0g" }}</span> تومان</span></div></div>
                     </div>
-                    <button type="button" disabled class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg opacity-60 cursor-not-allowed" aria-describedby="checkoutUnavailable">ادامه فرآیند پرداخت</button>
-                    <p id="checkoutUnavailable" class="text-sm text-gray-600 dark:text-gray-400 mt-3">مرحله تسویه‌حساب هنوز در فروشگاه راه‌اندازی نشده است.</p>
+                    <a id="checkoutLink" href="{% url 'storefront:checkout' %}" class="block text-center w-full bg-primary hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg {% if not cart_items %}opacity-60 pointer-events-none{% endif %}" {% if not cart_items %}aria-disabled="true" tabindex="-1"{% endif %}>ادامه به جزئیات سفارش</a>
                 </div>
             </div>
         </div>

@@ -28,6 +28,13 @@
         document.getElementById("cartOriginalPrice").textContent = format(original);
         document.getElementById("cartDiscount").textContent = format(original - total);
         document.getElementById("cartTotal").textContent = format(total);
+        const checkoutLink = document.getElementById("checkoutLink");
+        if (!rows.length) {
+            checkoutLink.removeAttribute("href");
+            checkoutLink.setAttribute("aria-disabled", "true");
+            checkoutLink.setAttribute("tabindex", "-1");
+            checkoutLink.classList.add("opacity-60", "pointer-events-none");
+        }
         if (!rows.length && !document.getElementById("cartEmpty")) {
             const empty = document.createElement("div");
             empty.id = "cartEmpty";
