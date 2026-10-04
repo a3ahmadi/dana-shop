@@ -1,0 +1,40 @@
+<div class="space-y-6" id="orderDetailContent">
+  <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <a href="{% url 'storefront:panel' %}?tab=orders" data-back-orders class="inline-flex items-center gap-2 text-primary hover:underline mb-5">→ بازگشت به سفارش‌های من</a>
+    <div class="flex flex-wrap justify-between gap-4"><div><h2 class="font-black text-2xl text-gray-800 dark:text-white">جزئیات سفارش {{ order.order_number }}</h2><p class="text-gray-600 dark:text-gray-400 mt-1">ثبت‌شده در {{ order.created_at|date:"Y/m/d - H:i" }}</p></div><span class="rounded-full px-3 py-1 text-sm font-medium bg-blue-50 text-primary h-fit">{{ order.get_status_display }}</span></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-5">محصولات سفارش</h3>
+        <div class="space-y-4">
+          {% for item in order.items.all %}
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
+            <div class="flex items-center gap-4 min-w-0"><div class="w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center overflow-hidden">{% if item.product.main_image %}<img src="{{ item.product.main_image.url }}" alt="" class="max-w-full max-h-full object-contain">{% endif %}</div><div><strong class="text-gray-800 dark:text-white">{{ item.product_name }}</strong><p class="text-sm text-gray-600 dark:text-gray-400 mt-1">رنگ: {{ item.color }} | تعداد: {{ item.quantity }}</p></div></div>
+            <span class="font-medium">{{ item.total_price|floatformat:"0g" }} تومان</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-5">اطلاعات ارسال</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+          <div class="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4"><h4 class="font-bold mb-2">آدرس تحویل</h4><p>{{ order.recipient_name }}</p><p class="mt-1">{{ order.state }}، {{ order.city }}، {{ order.complete_address }}</p><p class="mt-1">کد پستی: {{ order.postal_code }}</p><p class="mt-1">شماره گیرنده: {{ order.phone }}</p></div>
+          <div class="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4"><h4 class="font-bold mb-2">روش ارسال</h4><p>{{ order.get_shipping_method_display }}</p><p class="mt-1">هزینه ارسال: پس‌کرایه</p><p class="mt-1">کد رهگیری ارسال: {% if order.tracking_code %}<strong dir="ltr">{{ order.tracking_code }}</strong>{% else %}هنوز ثبت نشده{% endif %}</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-6">
+      <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-5">خلاصه سفارش</h3>
+        <div class="space-y-3 text-sm"><div class="flex justify-between gap-3"><span>مبلغ محصولات</span><strong>{{ order.total_price|floatformat:"0g" }} تومان</strong></div><div class="flex justify-between gap-3"><span>هزینه ارسال</span><strong>پس‌کرایه</strong></div><div class="flex justify-between gap-3 border-t border-gray-200 dark:border-gray-700 pt-3 text-base"><span>مبلغ پرداخت آنلاین</span><strong class="text-primary">{{ order.total_price|floatformat:"0g" }} تومان</strong></div></div>
+      </div>
+      <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-5">اطلاعات پرداخت</h3>
+        <div class="space-y-3 text-sm"><div class="flex justify-between gap-3"><span>روش پرداخت</span><span>درگاه پرداخت آنلاین</span></div><div class="flex justify-between gap-3"><span>وضعیت پرداخت</span><strong>{{ order.get_payment_status_display }}</strong></div>{% if payment and payment.ref_id %}<div class="flex justify-between gap-3"><span>شماره پیگیری پرداخت</span><strong dir="ltr">{{ payment.ref_id }}</strong></div>{% endif %}</div>
+        {% if order.status == 'cancelled' and order.payment_status == 'paid' %}<p class="text-sm text-amber-700 dark:text-amber-300 mt-4">سفارش لغو شده است؛ بازگشت وجه در این نسخه خودکار انجام نمی‌شود.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>

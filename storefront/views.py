@@ -1,10 +1,12 @@
+from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
+from django.views import View
 from django.views.generic import DetailView, TemplateView
 
 from accounts.redirects import safe_next_url
@@ -13,6 +15,7 @@ from cart.cart import Cart
 from checkouts.serializers import CheckoutSerializer
 from checkouts.state import cart_signature
 from checkouts.validators import available_shipping_methods, shipping_for_city
+from orders.models import Order
 from products.models import Color, Product
 
 
@@ -119,6 +122,61 @@ class AcceptPageView(LoginRequiredMixin, TemplateView):
             "shipping_method": self.shipping_method,
         })
         return context
+
+
+class PanelAccessMixin(LoginRequiredMixin):
+    def handle_no_permission(self):
+        return redirect("storefront:home")
+
+
+@method_decorator(never_cache, name="dispatch")
+class UserPanelPageView(PanelAccessMixin, TemplateView):
+    template_name = "storefront/pages/user-panel.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        orders = list(
+            Order.objects.filter(user=self.request.user)
+            .prefetch_related("items")
+            .order_by("-created_at")
+        )
+        context.update({
+            "profile": self.request.user.profile,
+            "orders": orders,
+            "active_orders_count": sum(order.status in ("pending", "paid", "processing", "shipping") for order in orders),
+            "selected_tab": "orders" if self.request.GET.get("tab") == "orders" else "profile",
+            "selected_order": getattr(self, "selected_order", None),
+            "selected_payment": getattr(self, "selected_payment", None),
+        })
+        return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class UserPanelOrderDetailView(UserPanelPageView):
+    def get(self, request, order_id, *args, **kwargs):
+        self.selected_order = get_object_or_404(
+            Order.objects.select_related("payment").prefetch_related("items__product"),
+            id=order_id,
+            user=request.user,
+        )
+        self.selected_payment = getattr(self.selected_order, "payment", None)
+        if request.GET.get("fragment") == "1":
+            return render(request, "storefront/pages/user-panel-order-detail.html", {
+                "order": self.selected_order,
+                "payment": self.selected_payment,
+            })
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["selected_tab"] = "orders"
+        return context
+
+
+class UserPanelLogoutView(View):
+    def post(self, request):
+        logout(request)
+        return redirect("storefront:home")
 
 
 class ProductDetailPageView(DetailView):

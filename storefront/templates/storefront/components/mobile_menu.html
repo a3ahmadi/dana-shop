@@ -24,11 +24,9 @@
             <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                 <a href="/#categories" class="block">دسته‌بندی‌ها</a>
             </li>
+            {% if request.user.is_authenticated %}<li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3"><a href="{% url 'storefront:panel' %}?tab=orders" class="block">سفارش‌های من</a></li>{% endif %}
             <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                <a href="/orders/" class="block">پیگیری سفارش</a>
-            </li>
-            <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                <a href="{% url 'storefront:login' %}" class="block">ورود / ثبت نام</a>
+                <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}" class="block">{% if request.user.is_authenticated %}حساب کاربری{% else %}ورود / ثبت نام{% endif %}</a>
             </li>
             <li class="bg-gray-50 dark:bg-custom-dark border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                 <a href="/#site-footer" class="block">تماس با ما</a>

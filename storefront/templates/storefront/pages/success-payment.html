@@ -43,7 +43,8 @@
         <p class="text-center text-gray-700 dark:text-gray-300">پرداخت تأیید شد. برای دیدن جزئیات سفارش، وارد حساب کاربری خود شوید.</p>
         <a href="{% url 'storefront:login' %}" class="w-full border border-green-600 text-green-700 dark:text-green-300 font-medium py-3 px-4 rounded-lg flex items-center justify-center">ورود به حساب کاربری</a>
         {% endif %}
-        <a href="{% url 'storefront:home' %}" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">بازگشت به فروشگاه</a>
+        {% if order %}<a href="{% url 'storefront:panel_order_detail' order.id %}" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">مشاهده سفارش</a>{% endif %}
+        <a href="{% url 'storefront:home' %}" class="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-3 px-4 rounded-lg flex items-center justify-center">بازگشت به فروشگاه</a>
       </div>
     </div>
   </div>

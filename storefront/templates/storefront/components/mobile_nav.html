@@ -46,7 +46,7 @@
         </a>
 
         <!-- Profile -->
-        <a href="{% url 'storefront:login' %}" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
+        <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}" aria-label="حساب کاربری" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
             <div class="w-[50px] h-[50px] flex items-center justify-center rounded-full mb-1 bg-primary dark:bg-[rgba(255,255,255,0.05)] transition-all duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
                     <path fill="currentColor"

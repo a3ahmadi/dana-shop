@@ -1,0 +1,97 @@
+{% extends "storefront/base.html" %}
+{% load static %}
+{% block title %}حساب کاربری | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-8" id="userPanel" data-initial-tab="{{ selected_tab }}" data-initial-order="{% if selected_order %}{{ selected_order.id }}{% endif %}">
+  <div class="container">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <aside class="lg:col-span-1">
+        <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-5 lg:sticky lg:top-24">
+          <div class="border-b border-gray-200 dark:border-gray-700 pb-5 mb-5">
+            <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold mb-3" aria-hidden="true">{% if profile.first_name %}{{ profile.first_name|slice:":1" }}{% else %}د{% endif %}</div>
+            <h1 class="text-lg font-bold text-gray-800 dark:text-white" id="panelProfileName">{% if profile.first_name or profile.last_name %}{{ profile.first_name }} {{ profile.last_name }}{% else %}حساب کاربری من{% endif %}</h1>
+          </div>
+          <nav aria-label="بخش‌های حساب کاربری" class="space-y-2">
+            <a href="{% url 'storefront:panel' %}" data-panel-tab="profile" aria-current="{% if selected_tab == 'profile' %}page{% else %}false{% endif %}" class="block rounded-lg px-4 py-3 font-medium {% if selected_tab == 'profile' %}bg-blue-50 text-primary dark:bg-blue-900/20{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800{% endif %}">اطلاعات حساب</a>
+            <a href="{% url 'storefront:panel' %}?tab=orders" data-panel-tab="orders" aria-current="{% if selected_tab == 'orders' %}page{% else %}false{% endif %}" class="block rounded-lg px-4 py-3 font-medium {% if selected_tab == 'orders' %}bg-blue-50 text-primary dark:bg-blue-900/20{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800{% endif %}">سفارش‌های من</a>
+          </nav>
+          <form method="post" action="{% url 'storefront:panel_logout' %}" class="border-t border-gray-200 dark:border-gray-700 mt-5 pt-5">
+            {% csrf_token %}
+            <button type="submit" class="w-full text-right rounded-lg px-4 py-3 font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">خروج از حساب</button>
+          </form>
+        </div>
+      </aside>
+
+      <div class="lg:col-span-3 min-w-0">
+        <section id="panelProfile" {% if selected_tab != 'profile' %}hidden{% endif %} class="space-y-6" aria-labelledby="panelProfileTitle">
+          <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 id="panelProfileTitle" class="font-black text-2xl text-gray-800 dark:text-white">اطلاعات حساب کاربری</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">اطلاعات شخصی خود را ویرایش کنید.</p>
+          </div>
+          <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-6">اطلاعات شخصی</h3>
+            <form id="panelProfileForm" class="space-y-6">
+              {% csrf_token %}
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label for="panelFirstName" class="block text-sm font-medium mb-2">نام</label><input id="panelFirstName" name="first_name" value="{{ profile.first_name }}" maxlength="50" autocomplete="given-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-zinc-800 dark:border-gray-600 dark:text-white"></div>
+                <div><label for="panelLastName" class="block text-sm font-medium mb-2">نام خانوادگی</label><input id="panelLastName" name="last_name" value="{{ profile.last_name }}" maxlength="50" autocomplete="family-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-zinc-800 dark:border-gray-600 dark:text-white"></div>
+                <div><label for="panelBirth" class="block text-sm font-medium mb-2">تاریخ تولد</label><input id="panelBirth" name="birth" value="{{ profile.birth }}" maxlength="10" placeholder="۱۳۷۰/۰۵/۱۵" inputmode="numeric" class="w-full px-4 py-3 border border-gray-300 rounded-lg dark:bg-zinc-800 dark:border-gray-600 dark:text-white"></div>
+                <fieldset><legend class="block text-sm font-medium mb-2">جنسیت</legend><div class="flex items-center gap-6 pt-2"><label class="inline-flex items-center gap-2"><input type="radio" name="gender" value="man" {% if profile.gender == 'man' %}checked{% endif %}>مرد</label><label class="inline-flex items-center gap-2"><input type="radio" name="gender" value="woman" {% if profile.gender == 'woman' %}checked{% endif %}>زن</label></div></fieldset>
+              </div>
+              <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-4">
+                <button type="submit" id="panelSaveProfile" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-600 disabled:opacity-50">ذخیره تغییرات</button>
+                <p id="panelProfileStatus" role="status" aria-live="polite" class="text-sm"></p>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section id="panelOrders" {% if selected_tab != 'orders' %}hidden{% endif %} class="space-y-6" aria-labelledby="panelOrdersTitle">
+          <div id="panelOrdersList" {% if selected_order %}hidden{% endif %} class="space-y-6">
+            <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-wrap items-center justify-between gap-4">
+              <div><h2 id="panelOrdersTitle" class="font-black text-2xl text-gray-800 dark:text-white">سفارش‌های من</h2><p class="text-gray-600 dark:text-gray-400 mt-1">فهرست و وضعیت سفارش‌های شما</p></div>
+              <span class="text-sm text-gray-600 dark:text-gray-400">سفارش‌های فعال: <strong id="panelActiveCount">{{ active_orders_count }}</strong></span>
+            </div>
+            <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div><label for="panelOrderStatus" class="block text-sm font-medium mb-2">وضعیت</label><select id="panelOrderStatus" class="w-full border border-gray-300 rounded-lg px-4 py-3 dark:bg-zinc-800 dark:border-gray-600"><option value="">همه وضعیت‌ها</option><option value="pending">در انتظار پرداخت</option><option value="paid">پرداخت شده</option><option value="processing">در حال پردازش</option><option value="shipping">در حال ارسال</option><option value="delivered">تحویل شده</option><option value="cancelled">لغو شده</option></select></div>
+                <div><label for="panelOrderPeriod" class="block text-sm font-medium mb-2">زمان</label><select id="panelOrderPeriod" class="w-full border border-gray-300 rounded-lg px-4 py-3 dark:bg-zinc-800 dark:border-gray-600"><option value="">همه زمان‌ها</option><option value="7">۷ روز گذشته</option><option value="30">۳۰ روز گذشته</option><option value="90">۳ ماه گذشته</option><option value="365">یک سال گذشته</option></select></div>
+                <div><label for="panelOrderSearch" class="block text-sm font-medium mb-2">جست‌وجو</label><input id="panelOrderSearch" type="search" autocomplete="off" placeholder="شماره سفارش یا نام کالا" class="w-full border border-gray-300 rounded-lg px-4 py-3 dark:bg-zinc-800 dark:border-gray-600"></div>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-custom-dark rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-xl text-gray-800 dark:text-white">لیست سفارش‌ها</h3><span id="panelVisibleCount" class="text-sm text-gray-500"></span></div>
+              <div id="panelOrderCards" class="space-y-4">
+                {% for order in orders %}
+                <article class="panel-order-card border border-gray-200 dark:border-gray-700 rounded-xl p-5" data-status="{{ order.status }}" data-created="{{ order.created_at|date:'U' }}" data-search="{{ order.order_number }} {{ order.tracking_code }} {% for item in order.items.all %}{{ item.product_name }} {% endfor %}">
+                  <div class="flex flex-wrap justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                    <div><h4 class="font-bold text-gray-800 dark:text-white">سفارش {{ order.order_number }}</h4><p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ order.created_at|date:"Y/m/d - H:i" }}</p></div>
+                    <span class="panel-order-status inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if order.status == 'cancelled' %}bg-red-100 text-red-800{% elif order.status == 'delivered' %}bg-green-100 text-green-800{% elif order.status == 'shipping' %}bg-cyan-100 text-cyan-800{% elif order.status == 'processing' %}bg-purple-100 text-purple-800{% elif order.status == 'paid' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ order.get_status_display }}</span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <p>تعداد کالا: {{ order.items.all|length }}</p><p>مبلغ سفارش: <strong>{{ order.total_price|floatformat:"0g" }} تومان</strong></p>
+                    <p>روش ارسال: {{ order.get_shipping_method_display }}، پس‌کرایه</p><p>کد رهگیری ارسال: {% if order.tracking_code %}<strong dir="ltr">{{ order.tracking_code }}</strong>{% else %}هنوز ثبت نشده{% endif %}</p>
+                  </div>
+                  <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">{% for item in order.items.all %}{{ item.product_name }}{% if not forloop.last %}، {% endif %}{% endfor %}</div>
+                  <div class="flex flex-wrap items-center gap-3 mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <a href="{% url 'storefront:panel_order_detail' order.id %}" data-order-detail="{{ order.id }}" class="bg-primary text-white px-5 py-2.5 rounded-lg hover:bg-primary-600">مشاهده جزئیات</a>
+                    {% if order.status == 'pending' or order.status == 'processing' %}<button type="button" data-cancel-order="{{ order.id }}" data-paid="{% if order.payment_status == 'paid' %}1{% else %}0{% endif %}" class="border border-red-300 text-red-700 px-5 py-2.5 rounded-lg hover:bg-red-50">لغو سفارش</button>{% endif %}
+                  </div>
+                </article>
+                {% empty %}<p class="text-gray-600 dark:text-gray-400">هنوز سفارشی ثبت نکرده‌اید.</p>{% endfor %}
+              </div>
+              {% if orders %}<p id="panelNoMatches" hidden class="text-gray-600 dark:text-gray-400 py-6 text-center">سفارشی با این فیلتر یا جست‌وجو پیدا نشد.</p>{% endif %}
+              <p id="panelOrdersStatus" role="status" aria-live="polite" class="text-sm mt-4"></p>
+            </div>
+          </div>
+
+          <div id="panelOrderDetail" {% if not selected_order %}hidden{% endif %} aria-live="polite">
+            {% if selected_order %}{% include "storefront/pages/user-panel-order-detail.html" with order=selected_order payment=selected_payment %}{% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'storefront/js/user-panel.js' %}"></script>{% endblock %}

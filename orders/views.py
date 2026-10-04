@@ -277,6 +277,16 @@ class CancelOrderAPIView(APIView):
             raise_exception=True
         )
 
+        if order.status == "processing" and order.payment_status == "paid":
+            quantities = defaultdict(int)
+            for item in order.items.all():
+                quantities[item.product_id] += item.quantity
+            products = Product.objects.select_for_update().in_bulk(quantities)
+            for product_id, quantity in quantities.items():
+                product = products[product_id]
+                product.stock += quantity
+                product.save(update_fields=["stock", "updated_at"])
+
         order.status = "cancelled"
 
         order.save(

@@ -74,6 +74,13 @@ class Order(models.Model):
         verbose_name="روش ارسال"
     )
 
+    tracking_code = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name="کد رهگیری ارسال",
+    )
+
     # چون ارسال پس‌کرایه است
     shipping_price = models.PositiveIntegerField(
         default=0,

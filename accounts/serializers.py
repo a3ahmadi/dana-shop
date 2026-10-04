@@ -40,9 +40,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    phone = serializers.CharField(source="user.phone_number", read_only=True)
-
     class Meta:
         model = Profile
-        fields = ["id", "phone", "first_name", "last_name", "email", "birth", "gender", "created_at", "updated_at"]
-        read_only_fields = ["id", "phone", "created_at", "updated_at"]
+        fields = ["id", "first_name", "last_name", "birth", "gender", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]

@@ -79,6 +79,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             "status",
             "payment_status",
             "shipping_method",
+            "tracking_code",
             "created_at",
         ]
 
@@ -104,6 +105,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             "complete_address",
 
             "shipping_method",
+            "tracking_code",
             "shipping_price",
 
             "original_price",
@@ -125,12 +127,12 @@ class CancelOrderSerializer(serializers.Serializer):
 
         order = self.context["order"]
 
-        if order.status != "pending":
+        if order.status not in ("pending", "processing"):
             raise serializers.ValidationError(
                 "این سفارش قابل لغو نیست."
             )
 
-        if order.payment_status == "paid":
+        if order.status == "pending" and order.payment_status == "paid":
             raise serializers.ValidationError(
                 "سفارش پرداخت شده قابل لغو نیست."
             )

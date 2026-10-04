@@ -96,7 +96,7 @@
                     <div class="xl:inline-block hidden me-3 h-10 w-px self-stretch bg-gray-200 dark:bg-gray-700">
                     </div>
                     <!-- login -->
-                    <a href="{% url 'storefront:login' %}"
+                    <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}"
                        class="bg-white dark:bg-custom-dark text-gray-900 dark:text-gray-100 flex xl:py-2 xl:px-3 xl:border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1f242c] transition-colors duration-200">
 
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -104,7 +104,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                         </svg>
-                        <span class="xl:inline-block hidden">ورود / ثبت نام</span>
+                        <span class="xl:inline-block hidden">{% if request.user.is_authenticated %}حساب کاربری{% else %}ورود / ثبت نام{% endif %}</span>
                     </a>
                 </div>
             </div>
@@ -130,11 +130,7 @@
                                 <span>دسته‌بندی‌ها</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="/orders/" class="flex items-center gap-2 hover:text-primary transition">
-                                <span>پیگیری سفارش</span>
-                            </a>
-                        </li>
+                        {% if request.user.is_authenticated %}<li><a href="{% url 'storefront:panel' %}?tab=orders" class="flex items-center gap-2 hover:text-primary transition"><span>سفارش‌های من</span></a></li>{% endif %}
                         <li>
                             <a href="/#site-footer" class="flex items-center gap-2 hover:text-primary transition">
                                 <span>تماس با ما</span>
