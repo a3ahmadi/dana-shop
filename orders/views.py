@@ -129,33 +129,42 @@ class CreateOrderAPIView(APIView):
 
             order.save()
 
-            # آیتم‌های قبلی سفارش را حذف کن
-            order.items.all().delete()
-
-        # ساخت آیتم‌های جدید
-        order_items = []
+        # آیتم‌های سفارش در انتظار پرداخت را با سبد فعلی همگام کن.
+        existing_items = {
+            (item.product_id, item.color): item
+            for item in order.items.select_for_update()
+        }
+        new_items = []
+        changed_items = []
 
         for item in items:
 
             product = item["product"]
             color = item["color"]
-            quantity = item["quantity"]
-
-            order_items.append(
-                OrderItem(
+            order_item = existing_items.pop((product.id, color.name), None)
+            if order_item is None:
+                new_items.append(OrderItem(
                     order=order,
                     product=product,
                     product_name=product.name,
                     color=color.name,
                     price=item["final_price"],
-                    quantity=quantity,
+                    quantity=item["quantity"],
                     total_price=item["total"],
-                )
-            )
+                ))
+            else:
+                order_item.product_name = product.name
+                order_item.price = item["final_price"]
+                order_item.quantity = item["quantity"]
+                order_item.total_price = item["total"]
+                changed_items.append(order_item)
 
-        OrderItem.objects.bulk_create(
-            order_items
-        )
+        if existing_items:
+            OrderItem.objects.filter(id__in=[item.id for item in existing_items.values()]).delete()
+        if changed_items:
+            OrderItem.objects.bulk_update(changed_items, ["product_name", "price", "quantity", "total_price"])
+        if new_items:
+            OrderItem.objects.bulk_create(new_items)
 
         return Response(
             {

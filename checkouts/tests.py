@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from accounts.models import User
 from addresses.models import Address
-from orders.models import Order
+from orders.models import Order, OrderItem
 from payment.models import Payment
 from products.models import Category, Color, Product
 
@@ -237,6 +237,81 @@ class CheckoutStageTests(TestCase):
                 )
         self.assertEqual(payment_response.status_code, 201)
         self.assertEqual(payment_response.json()["payment"]["payment_url"], "https://www.zarinpal.com/pg/StartPay/TEST")
+
+    def test_returning_to_cart_updates_items_on_the_same_pending_order(self):
+        self.prepare_confirmation()
+        order_url = "/api/v1/orders/create/"
+        payload = json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"})
+        self.assertEqual(self.client.post(order_url, payload, content_type="application/json").status_code, 200)
+        order = Order.objects.get(user=self.user)
+        order_number = order.order_number
+        original_item = order.items.get()
+
+        second_color = Color.objects.create(name="سبز")
+        self.product.colors.add(second_color)
+        self.assertEqual(self.client.patch(
+            f"/api/v1/cart/items/{self.product.id}/",
+            data=json.dumps({"color_id": self.color.id, "quantity": 1}),
+            content_type="application/json",
+        ).status_code, 200)
+        self.assertEqual(self.client.post(
+            "/api/v1/cart/items/",
+            data=json.dumps({"product_id": self.product.id, "color_id": second_color.id, "quantity": 2}),
+            content_type="application/json",
+        ).status_code, 201)
+        self.assertEqual(self.post_checkout(self.shiraz, "tipax").status_code, 200)
+        response = self.client.post(
+            order_url,
+            data=json.dumps({"address_id": self.shiraz.id, "shipping_method": "tipax"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(Order.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(response.json()["order"]["id"], order.id)
+        self.assertEqual(order.order_number, order_number)
+        self.assertEqual(order.shipping_method, "tipax")
+        self.assertEqual(order.city, "شیراز")
+        self.assertEqual(order.total_price, 270000)
+        self.assertEqual(order.items.count(), 2)
+        original_item.refresh_from_db()
+        self.assertEqual(original_item.quantity, 1)
+        self.assertEqual(original_item.total_price, 90000)
+        added_item = order.items.get(color=second_color.name)
+        self.assertEqual(added_item.quantity, 2)
+
+        self.assertEqual(self.client.delete(
+            f"/api/v1/cart/items/{self.product.id}/delete/?color_id={self.color.id}"
+        ).status_code, 200)
+        self.assertEqual(self.post_checkout(self.shiraz, "tipax").status_code, 200)
+        self.assertEqual(self.client.post(
+            order_url,
+            data=json.dumps({"address_id": self.shiraz.id, "shipping_method": "tipax"}),
+            content_type="application/json",
+        ).status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(Order.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(order.items.count(), 1)
+        self.assertFalse(OrderItem.objects.filter(id=original_item.id).exists())
+        self.assertEqual(order.items.get().id, added_item.id)
+        self.assertEqual(order.total_price, 180000)
+
+    def test_order_items_are_visible_in_admin(self):
+        self.prepare_confirmation()
+        self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        order = Order.objects.get(user=self.user)
+        self.user.is_staff = True
+        self.user.is_superuser = True
+        self.user.save(update_fields=["is_staff", "is_superuser"])
+
+        response = self.client.get(reverse("admin:orders_order_change", args=[order.id]))
+        self.assertContains(response, self.product.name)
+        self.assertContains(response, self.color.name)
+        self.assertEqual(self.client.get(reverse("admin:orders_orderitem_changelist")).status_code, 200)
 
     def test_order_creation_checks_combined_stock_for_two_colors(self):
         second_color = Color.objects.create(name="سبز")
