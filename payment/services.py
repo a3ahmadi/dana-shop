@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.db import transaction
 import requests
 from django.conf import settings
@@ -201,31 +203,35 @@ def complete_payment(payment_id, request):
         )
     }
 
-    # بررسی موجودی
+    # بررسی موجودی مجموع رنگ‌های هر محصول
+    quantities = defaultdict(int)
+    product_names = {}
     for item in order_items:
-        product = products.get(item.product_id)
+        quantities[item.product_id] += item.quantity
+        product_names[item.product_id] = item.product_name
+
+    for product_id, quantity in quantities.items():
+        product = products.get(product_id)
 
         if not product:
             raise ValueError(
-                f"محصول «{item.product_name}» پیدا نشد."
+                f"محصول «{product_names[product_id]}» پیدا نشد."
             )
 
         if not product.is_active:
             raise ValueError(
-                f"محصول «{item.product_name}» دیگر قابل خرید نیست."
+                f"محصول «{product_names[product_id]}» دیگر قابل خرید نیست."
             )
 
-        if product.stock < item.quantity:
+        if product.stock < quantity:
             raise ValueError(
-                f"موجودی محصول «{item.product_name}» کافی نیست."
+                f"موجودی محصول «{product_names[product_id]}» کافی نیست."
             )
 
     # کاهش موجودی
-    for item in order_items:
-
-        product = products[item.product_id]
-
-        product.stock -= item.quantity
+    for product_id, quantity in quantities.items():
+        product = products[product_id]
+        product.stock -= quantity
 
         product.save(
             update_fields=[

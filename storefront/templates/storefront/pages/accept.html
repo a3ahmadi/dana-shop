@@ -1,0 +1,83 @@
+{% extends "storefront/base.html" %}
+{% load static %}
+{% block title %}تأیید سفارش | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-5" id="acceptPage">
+  <div class="container">
+    <div class="text-center mb-10">
+      <h1 class="text-3xl font-black text-gray-800 dark:text-gray-300 mb-4">تأیید سفارش</h1>
+      <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">جزئیات سبد و نشانی تحویل را بررسی کنید. اگر درست است، به درگاه پرداخت بروید.</p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white dark:bg-custom-dark rounded-xl shadow-md p-6">
+          <div class="timeline-horizontal mb-8 flex items-center justify-between" aria-label="مراحل خرید">
+            <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">سبد خرید</div></div>
+            <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">جزئیات سفارش</div></div>
+            <div class="timeline-step active flex flex-col items-center text-center" aria-current="step"><div class="timeline-icon bg-primary text-white">۳</div><div class="timeline-title dark:text-white">تأیید</div></div>
+            <div class="timeline-step flex flex-col items-center text-center"><div class="timeline-icon">۴</div><div class="timeline-title dark:text-white">تکمیل</div></div>
+          </div>
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-300 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">اقلام سبد خرید</h2>
+          <div class="space-y-4">
+            {% for item in cart_items %}
+            <div class="flex flex-wrap justify-between items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-custom-light dark:bg-zinc-800">
+              <div class="flex items-center gap-4 min-w-0">
+                <div class="w-16 h-16 shrink-0 rounded-lg bg-white dark:bg-custom-dark flex items-center justify-center overflow-hidden">{% if item.product.main_image %}<img src="{{ item.product.main_image.url }}" alt="" class="max-w-full max-h-full object-contain">{% endif %}</div>
+                <div><h3 class="font-medium text-gray-800 dark:text-gray-300">{{ item.product.name }}</h3><p class="text-sm text-gray-500 dark:text-gray-400">رنگ: {{ item.color.name }} | تعداد: {{ item.quantity }}</p></div>
+              </div>
+              <span class="font-medium text-gray-800 dark:text-gray-300">{{ item.total|floatformat:"0g" }} تومان</span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="pt-4 mt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">جمع کل:</span><span>{{ cart_original_price|floatformat:"0g" }} تومان</span></div>
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">تخفیف:</span><span class="text-green-600">{{ cart_discount|floatformat:"0g" }} تومان</span></div>
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال:</span><span>پس‌کرایه</span></div>
+            <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700"><span class="font-bold text-gray-800 dark:text-gray-300">مبلغ محصولات برای پرداخت آنلاین:</span><span class="font-bold text-primary-500">{{ cart_total|floatformat:"0g" }} تومان</span></div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-custom-dark rounded-xl shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-300 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">اطلاعات ارسال</h2>
+          <div class="space-y-4">
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-custom-light dark:bg-zinc-800">
+              <div class="flex items-start justify-between gap-3"><h3 class="font-bold text-gray-800 dark:text-gray-300">{{ address.title }}</h3>{% if address.is_default %}<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">پیش‌فرض</span>{% endif %}</div>
+              <p class="text-gray-600 dark:text-gray-400 mt-2">{{ address.state }}، {{ address.city }}، {{ address.complete_address }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">گیرنده: {{ address.recipient_name }} | {{ address.phone }} | کد پستی: {{ address.postal_code }}</p>
+            </div>
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-custom-light dark:bg-zinc-800 flex items-center justify-between gap-3">
+              <div><h3 class="font-bold text-gray-800 dark:text-gray-300">{% if shipping_method == 'courier' %}پیک موتوری{% else %}تیپاکس{% endif %}</h3><p class="text-gray-600 dark:text-gray-400 mt-1">هزینهٔ ارسال هنگام تحویل پرداخت می‌شود.</p></div><span class="font-medium text-gray-800 dark:text-gray-300">پس‌کرایه</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white dark:bg-custom-dark rounded-xl shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-300 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">خلاصه نهایی</h2>
+          <div class="space-y-3">
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">جمع اقلام ({{ cart_count }} عدد)</span><span>{{ cart_original_price|floatformat:"0g" }} تومان</span></div>
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">تخفیف</span><span class="text-green-600">{{ cart_discount|floatformat:"0g" }} تومان</span></div>
+            <div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">هزینه ارسال</span><span>پس‌کرایه</span></div>
+            <div class="flex justify-between pt-3 border-t border-gray-200 dark:border-gray-700"><span class="font-bold text-gray-800 dark:text-gray-300">مبلغ پرداخت آنلاین</span><span class="font-bold text-primary-500">{{ cart_total|floatformat:"0g" }} تومان</span></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-custom-dark rounded-xl shadow-md p-6">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-300 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">اقدامات</h2>
+          <form id="confirmOrderForm" data-address-id="{{ address.id }}" data-shipping-method="{{ shipping_method }}">
+            {% csrf_token %}
+            <button id="confirmOrderButton" type="submit" class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50">تأیید و رفتن به درگاه پرداخت</button>
+          </form>
+          <p id="confirmOrderStatus" role="status" aria-live="polite" class="text-sm text-red-600 dark:text-red-400 mt-3"></p>
+          <div class="space-y-3 mt-4">
+            <a href="{% url 'storefront:checkout' %}" class="w-full border border-gray-300 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 font-medium py-3 px-6 rounded-lg flex items-center justify-center">اصلاح آدرس یا روش ارسال</a>
+            <a href="{% url 'storefront:cart' %}" class="w-full border border-gray-300 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 font-medium py-3 px-6 rounded-lg flex items-center justify-center">بازگشت به سبد خرید</a>
+          </div>
+        </div>
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">پس از تأیید، سفارش در انتظار پرداخت ساخته می‌شود و به درگاه پرداخت منتقل می‌شوید. هزینهٔ ارسال جداگانه و هنگام تحویل پرداخت می‌شود.</div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'storefront/js/accept.js' %}"></script>{% endblock %}

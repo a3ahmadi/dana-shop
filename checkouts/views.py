@@ -7,6 +7,7 @@ from addresses.models import Address
 from cart.cart import Cart
 
 from .serializers import CheckoutSerializer
+from .state import cart_signature
 from .validators import SHIPPING_METHODS
 
 
@@ -124,6 +125,7 @@ class CheckoutAPIView(APIView):
             "address_id": address.id,
             "shipping_method": shipping_method,
             "payment_method": serializer.validated_data["payment_method"],
+            "cart_signature": cart_signature(items),
         }
 
         return Response(

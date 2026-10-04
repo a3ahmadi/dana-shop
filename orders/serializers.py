@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
 from addresses.models import Address
+from cart.cart import Cart
+from checkouts.state import cart_signature
+from checkouts.validators import available_shipping_methods
 from .models import OrderItem, Order
 
 from .validators import validate_shipping_method
@@ -31,6 +34,24 @@ class CreateOrderSerializer(serializers.Serializer):
             )
 
         return value
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        selected = request.session.get("checkout") or {}
+        if (
+            selected.get("address_id") != attrs["address_id"]
+            or selected.get("shipping_method") != attrs["shipping_method"]
+            or selected.get("payment_method") != "online"
+            or selected.get("cart_signature") != cart_signature(list(Cart(request)))
+        ):
+            raise serializers.ValidationError("اطلاعات سفارش تغییر کرده است. جزئیات سفارش را دوباره تأیید کنید.")
+        address = Address.objects.get(id=attrs["address_id"], user=request.user)
+        if attrs["shipping_method"] not in available_shipping_methods(address.city):
+            raise serializers.ValidationError("روش ارسال با شهر انتخابی سازگار نیست.")
+        profile = request.user.profile
+        if not profile.first_name.strip() or not profile.last_name.strip():
+            raise serializers.ValidationError("نام و نام خانوادگی را کامل کنید.")
+        return attrs
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

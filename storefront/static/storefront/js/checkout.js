@@ -173,8 +173,7 @@
                 shipping_method: method,
                 payment_method: "online",
             });
-            checkoutStatus.textContent = "اطلاعات این مرحله ثبت شد. پس از آماده شدن مرحلهٔ تأیید می‌توانید ادامه دهید.";
-            checkoutStatus.className = "text-sm mt-3 text-green-700 dark:text-green-400";
+            window.location.assign("/accept/");
         } catch (error) {
             checkoutStatus.textContent = error.message;
             checkoutStatus.className = "text-sm mt-3 text-red-600 dark:text-red-400";

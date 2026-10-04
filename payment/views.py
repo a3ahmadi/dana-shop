@@ -1,4 +1,5 @@
 from rest_framework import status
+from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,6 +48,12 @@ class CreatePaymentAPIView(APIView):
                     "detail": "سفارش پیدا نشد."
                 },
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not settings.ZARINPAL_MERCHANT_ID or not settings.ZARINPAL_CALLBACK_URL:
+            return Response(
+                {"detail": "درگاه پرداخت هنوز پیکربندی نشده است."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         try:
@@ -239,3 +246,9 @@ class PaymentCallbackAPIView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        return Response({
+            "detail": "پرداخت با موفقیت تأیید شد.",
+            "order_number": order.order_number,
+            "ref_id": payment.ref_id,
+        })

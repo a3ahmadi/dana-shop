@@ -10,6 +10,8 @@ from django.views.generic import DetailView, TemplateView
 from accounts.redirects import safe_next_url
 from addresses.models import Address
 from cart.cart import Cart
+from checkouts.serializers import CheckoutSerializer
+from checkouts.state import cart_signature
 from checkouts.validators import available_shipping_methods, shipping_for_city
 from products.models import Color, Product
 
@@ -83,6 +85,38 @@ class CheckoutPageView(LoginRequiredMixin, TemplateView):
             "selected_address": selected_address,
             "shipping_method": shipping_method,
             "courier_available": bool(selected_address and "courier" in available_shipping_methods(selected_address.city)),
+        })
+        return context
+
+
+class AcceptPageView(LoginRequiredMixin, TemplateView):
+    template_name = "storefront/pages/accept.html"
+
+    def get(self, request, *args, **kwargs):
+        items = list(Cart(request))
+        if not items:
+            return redirect("storefront:cart")
+        selected = request.session.get("checkout") or {}
+        if selected.get("cart_signature") != cart_signature(items):
+            return redirect("storefront:checkout")
+        serializer = CheckoutSerializer(data=selected, context={"request": request})
+        if not serializer.is_valid():
+            return redirect("storefront:checkout")
+        self.items = items
+        self.address = Address.objects.get(id=selected["address_id"], user=request.user)
+        self.shipping_method = selected["shipping_method"]
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "cart_items": self.items,
+            "cart_count": sum(item["quantity"] for item in self.items),
+            "cart_original_price": sum(item["price"] * item["quantity"] for item in self.items),
+            "cart_discount": sum((item["price"] - item["final_price"]) * item["quantity"] for item in self.items),
+            "cart_total": sum(item["total"] for item in self.items),
+            "address": self.address,
+            "shipping_method": self.shipping_method,
         })
         return context
 

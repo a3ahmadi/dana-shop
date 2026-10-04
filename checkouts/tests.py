@@ -1,11 +1,13 @@
 import json
+from unittest.mock import patch
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import User
 from addresses.models import Address
 from orders.models import Order
+from payment.models import Payment
 from products.models import Category, Color, Product
 
 
@@ -137,8 +139,180 @@ class CheckoutStageTests(TestCase):
             "address_id": self.shiraz.id,
             "shipping_method": "tipax",
             "payment_method": "online",
+            "cart_signature": [[self.product.id, self.color.id, 2, "90000"]],
         })
         self.assertEqual(Order.objects.count(), 0)
         page = self.client.get(reverse("storefront:checkout"))
         self.assertEqual(page.context["selected_address"], self.shiraz)
         self.assertEqual(page.context["shipping_method"], "tipax")
+
+    def prepare_confirmation(self, address=None, shipping="courier"):
+        self.add_to_cart()
+        self.client.force_login(self.user)
+        profile = self.user.profile
+        profile.first_name = "علی"
+        profile.last_name = "رضایی"
+        profile.save()
+        response = self.post_checkout(address or self.tehran, shipping)
+        self.assertEqual(response.status_code, 200)
+
+    def test_confirmation_requires_saved_selection_and_shows_real_details(self):
+        self.add_to_cart()
+        self.client.force_login(self.user)
+        self.assertRedirects(self.client.get(reverse("storefront:accept")), reverse("storefront:checkout"))
+        profile = self.user.profile
+        profile.first_name = "علی"
+        profile.last_name = "رضایی"
+        profile.save()
+        self.assertEqual(self.post_checkout(self.shiraz, "tipax").status_code, 200)
+        response = self.client.get(reverse("storefront:accept"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["address"], self.shiraz)
+        self.assertEqual(response.context["shipping_method"], "tipax")
+        self.assertContains(response, self.product.name)
+        self.assertContains(response, self.shiraz.complete_address)
+        self.assertContains(response, "پس‌کرایه")
+        self.assertContains(response, 'href="/checkout/"')
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_confirmation_rechecks_deleted_address(self):
+        self.prepare_confirmation()
+        self.tehran.delete()
+        self.assertRedirects(self.client.get(reverse("storefront:accept")), reverse("storefront:checkout"))
+        response = self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.shiraz.id, "shipping_method": "tipax"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_cart_change_requires_checkout_again_before_order_creation(self):
+        self.prepare_confirmation()
+        self.client.patch(
+            f"/api/v1/cart/items/{self.product.id}/",
+            data=json.dumps({"color_id": self.color.id, "quantity": 3}),
+            content_type="application/json",
+        )
+        self.assertRedirects(self.client.get(reverse("storefront:accept")), reverse("storefront:checkout"))
+        response = self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_confirmation_creates_pending_order_only_on_explicit_action(self):
+        self.prepare_confirmation()
+        self.assertEqual(Order.objects.count(), 0)
+        self.assertEqual(self.client.get(reverse("storefront:accept")).status_code, 200)
+        self.assertEqual(Order.objects.count(), 0)
+        response = self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get(user=self.user)
+        self.assertEqual(order.id, response.json()["order"]["id"])
+        self.assertEqual(order.total_price, 180000)
+        self.assertEqual(order.shipping_price, 0)
+        self.assertEqual(order.items.count(), 1)
+        self.assertEqual(order.status, "pending")
+
+        with override_settings(ZARINPAL_MERCHANT_ID=None, ZARINPAL_CALLBACK_URL=None):
+            unconfigured = self.client.post(
+                "/api/v1/payments/create/",
+                data=json.dumps({"order_id": order.id}), content_type="application/json",
+            )
+        self.assertEqual(unconfigured.status_code, 503)
+        self.assertEqual(Payment.objects.count(), 0)
+
+        with override_settings(ZARINPAL_MERCHANT_ID="test-merchant", ZARINPAL_CALLBACK_URL="https://example.test/callback"):
+            with patch("payment.views.ZarinpalService.request_payment", return_value="https://www.zarinpal.com/pg/StartPay/TEST"):
+                payment_response = self.client.post(
+                    "/api/v1/payments/create/",
+                    data=json.dumps({"order_id": order.id}), content_type="application/json",
+                )
+        self.assertEqual(payment_response.status_code, 201)
+        self.assertEqual(payment_response.json()["payment"]["payment_url"], "https://www.zarinpal.com/pg/StartPay/TEST")
+
+    def test_order_creation_checks_combined_stock_for_two_colors(self):
+        second_color = Color.objects.create(name="سبز")
+        self.product.colors.add(second_color)
+        self.add_to_cart()
+        self.client.post(
+            "/api/v1/cart/items/",
+            data=json.dumps({"product_id": self.product.id, "color_id": second_color.id, "quantity": 4}),
+            content_type="application/json",
+        )
+        self.client.force_login(self.user)
+        profile = self.user.profile
+        profile.first_name = "علی"
+        profile.last_name = "رضایی"
+        profile.save()
+        self.assertEqual(self.post_checkout(self.tehran).status_code, 200)
+        response = self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_successful_payment_callback_returns_result(self):
+        self.prepare_confirmation()
+        self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        order = Order.objects.get(user=self.user)
+        payment = Payment.objects.create(order=order, amount=order.total_price, authority="TEST-AUTHORITY")
+        with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {"code": 100, "ref_id": "REF-1"}}):
+            response = self.client.get("/api/v1/payments/callback/?Authority=TEST-AUTHORITY&Status=OK")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["order_number"], order.order_number)
+        self.assertEqual(response.json()["ref_id"], "REF-1")
+        order.refresh_from_db()
+        payment.refresh_from_db()
+        self.assertEqual(order.status, "paid")
+        self.assertEqual(payment.status, "success")
+
+    def test_payment_callback_checks_combined_stock_after_checkout(self):
+        second_color = Color.objects.create(name="سبز")
+        self.product.colors.add(second_color)
+        self.add_to_cart()
+        self.client.post(
+            "/api/v1/cart/items/",
+            data=json.dumps({"product_id": self.product.id, "color_id": second_color.id, "quantity": 2}),
+            content_type="application/json",
+        )
+        self.client.force_login(self.user)
+        profile = self.user.profile
+        profile.first_name = "علی"
+        profile.last_name = "رضایی"
+        profile.save()
+        self.assertEqual(self.post_checkout(self.tehran).status_code, 200)
+        response = self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get(user=self.user)
+        payment = Payment.objects.create(order=order, amount=order.total_price, authority="TEST-COMBINED")
+        self.product.stock = 3
+        self.product.save(update_fields=["stock"])
+
+        with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {"code": 100, "ref_id": "REF-2"}}):
+            callback = self.client.get("/api/v1/payments/callback/?Authority=TEST-COMBINED&Status=OK")
+
+        self.assertEqual(callback.status_code, 400)
+        self.product.refresh_from_db()
+        order.refresh_from_db()
+        payment.refresh_from_db()
+        self.assertEqual(self.product.stock, 3)
+        self.assertEqual(order.status, "pending")
+        self.assertNotEqual(payment.status, "success")

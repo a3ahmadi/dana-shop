@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 from django.db import transaction
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -7,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from addresses.models import Address
 from cart.cart import Cart
+from products.models import Product
 from .models import Order, OrderItem
 from .serializers import (
     OrderListSerializer,
@@ -46,6 +48,18 @@ class CreateOrderAPIView(APIView):
         serializer.is_valid(
             raise_exception=True
         )
+
+        quantities = defaultdict(int)
+        for item in items:
+            quantities[item["product"].id] += item["quantity"]
+        products = Product.objects.select_for_update().in_bulk(quantities)
+        for product_id, quantity in quantities.items():
+            product = products.get(product_id)
+            if not product or not product.is_active or product.stock < quantity:
+                return Response(
+                    {"detail": "موجودی یکی از محصولات سبد خرید کافی نیست. سبد را بررسی کنید."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         address = Address.objects.get(
             id=serializer.validated_data["address_id"],
