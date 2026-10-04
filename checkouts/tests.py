@@ -228,6 +228,10 @@ class CheckoutStageTests(TestCase):
             )
         self.assertEqual(unconfigured.status_code, 503)
         self.assertEqual(Payment.objects.count(), 0)
+        failed_page = self.client.get(reverse("payment-start-failed", args=[order.id]))
+        self.assertTemplateUsed(failed_page, "storefront/pages/fail-payment.html")
+        self.assertContains(failed_page, order.order_number)
+        self.assertContains(failed_page, "تلاش مجدد برای پرداخت")
 
         with override_settings(ZARINPAL_MERCHANT_ID="test-merchant", ZARINPAL_CALLBACK_URL="https://example.test/callback"):
             with patch("payment.views.ZarinpalService.request_payment", return_value="https://www.zarinpal.com/pg/StartPay/TEST"):
@@ -336,7 +340,7 @@ class CheckoutStageTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Order.objects.count(), 0)
 
-    def test_successful_payment_callback_returns_result(self):
+    def test_successful_payment_callback_shows_result_page(self):
         self.prepare_confirmation()
         self.client.post(
             "/api/v1/orders/create/",
@@ -348,12 +352,94 @@ class CheckoutStageTests(TestCase):
         with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {"code": 100, "ref_id": "REF-1"}}):
             response = self.client.get("/api/v1/payments/callback/?Authority=TEST-AUTHORITY&Status=OK")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["order_number"], order.order_number)
-        self.assertEqual(response.json()["ref_id"], "REF-1")
+        self.assertTemplateUsed(response, "storefront/pages/success-payment.html")
+        self.assertContains(response, order.order_number)
+        self.assertContains(response, "REF-1")
+        self.assertContains(response, self.product.name)
+        self.assertNotContains(response, "TX-85967423")
         order.refresh_from_db()
         payment.refresh_from_db()
         self.assertEqual(order.status, "paid")
         self.assertEqual(payment.status, "success")
+        repeated = self.client.get("/api/v1/payments/callback/?Authority=TEST-AUTHORITY&Status=OK")
+        self.assertTemplateUsed(repeated, "storefront/pages/success-payment.html")
+        self.assertContains(repeated, "REF-1")
+
+    def test_cancelled_payment_shows_failure_page_and_keeps_order_for_retry(self):
+        self.prepare_confirmation()
+        self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        order = Order.objects.get(user=self.user)
+        payment = Payment.objects.create(order=order, amount=order.total_price, authority="TEST-CANCELLED")
+        response = self.client.get("/api/v1/payments/callback/?Authority=TEST-CANCELLED&Status=NOK")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "storefront/pages/fail-payment.html")
+        self.assertContains(response, order.order_number)
+        self.assertContains(response, "تلاش مجدد برای پرداخت")
+        payment.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(payment.status, "failed")
+        self.assertEqual(order.payment_status, "failed")
+        self.assertEqual(self.client.get(reverse("storefront:accept")).status_code, 200)
+
+    def test_unverified_payment_shows_failure_page_without_retry(self):
+        self.prepare_confirmation()
+        self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        order = Order.objects.get(user=self.user)
+        payment = Payment.objects.create(order=order, amount=order.total_price, authority="TEST-UNVERIFIED")
+        with patch("payment.views.ZarinpalService.verify_payment", side_effect=TimeoutError):
+            response = self.client.get("/api/v1/payments/callback/?Authority=TEST-UNVERIFIED&Status=OK")
+        self.assertEqual(response.status_code, 503)
+        self.assertTemplateUsed(response, "storefront/pages/fail-payment.html")
+        self.assertContains(response, "وضعیت تراکنش نیاز به بررسی دارد", status_code=503)
+        self.assertNotContains(response, "تلاش مجدد برای پرداخت", status_code=503)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, "pending")
+
+        with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {}}):
+            malformed = self.client.get("/api/v1/payments/callback/?Authority=TEST-UNVERIFIED&Status=OK")
+        self.assertTemplateUsed(malformed, "storefront/pages/fail-payment.html")
+        self.assertNotContains(malformed, "تلاش مجدد برای پرداخت", status_code=503)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, "pending")
+
+        with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {"code": -1}}):
+            rejected = self.client.get("/api/v1/payments/callback/?Authority=TEST-UNVERIFIED&Status=OK")
+        self.assertTemplateUsed(rejected, "storefront/pages/fail-payment.html")
+        self.assertContains(rejected, "تلاش مجدد برای پرداخت")
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, "failed")
+
+    def test_invalid_payment_callback_shows_generic_failure_page(self):
+        missing = self.client.get("/api/v1/payments/callback/")
+        unknown = self.client.get("/api/v1/payments/callback/?Authority=UNKNOWN&Status=OK")
+        self.assertEqual(missing.status_code, 400)
+        self.assertEqual(unknown.status_code, 404)
+        self.assertTemplateUsed(missing, "storefront/pages/fail-payment.html")
+        self.assertTemplateUsed(unknown, "storefront/pages/fail-payment.html")
+
+    def test_payment_result_does_not_expose_another_customers_order(self):
+        self.prepare_confirmation()
+        self.client.post(
+            "/api/v1/orders/create/",
+            data=json.dumps({"address_id": self.tehran.id, "shipping_method": "courier"}),
+            content_type="application/json",
+        )
+        order = Order.objects.get(user=self.user)
+        Payment.objects.create(order=order, amount=order.total_price, authority="TEST-PRIVATE", status="success", ref_id="PRIVATE-REF")
+        self.client.force_login(self.other_user)
+        callback = self.client.get("/api/v1/payments/callback/?Authority=TEST-PRIVATE&Status=OK")
+        self.assertTemplateUsed(callback, "storefront/pages/success-payment.html")
+        self.assertNotContains(callback, order.order_number)
+        self.assertNotContains(callback, "PRIVATE-REF")
+        self.assertEqual(self.client.get(reverse("payment-start-failed", args=[order.id])).status_code, 404)
 
     def test_payment_callback_checks_combined_stock_after_checkout(self):
         second_color = Color.objects.create(name="سبز")
@@ -384,7 +470,9 @@ class CheckoutStageTests(TestCase):
         with patch("payment.views.ZarinpalService.verify_payment", return_value={"data": {"code": 100, "ref_id": "REF-2"}}):
             callback = self.client.get("/api/v1/payments/callback/?Authority=TEST-COMBINED&Status=OK")
 
-        self.assertEqual(callback.status_code, 400)
+        self.assertEqual(callback.status_code, 503)
+        self.assertTemplateUsed(callback, "storefront/pages/fail-payment.html")
+        self.assertNotContains(callback, "تلاش مجدد برای پرداخت", status_code=503)
         self.product.refresh_from_db()
         order.refresh_from_db()
         payment.refresh_from_db()

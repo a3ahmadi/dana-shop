@@ -1,0 +1,51 @@
+{% extends "storefront/base.html" %}
+{% block title %}پرداخت موفق | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-8" id="successPaymentPage">
+  <div class="container">
+    <div class="timeline-horizontal mb-8 flex items-center justify-between" aria-label="مراحل خرید">
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">سبد خرید</div></div>
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">جزئیات سفارش</div></div>
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">تأیید</div></div>
+      <div class="timeline-step completed flex flex-col items-center text-center" aria-current="step"><div class="timeline-icon">✓</div><div class="timeline-title">تکمیل</div></div>
+    </div>
+
+    <div class="max-w-xl w-full mx-auto bg-white dark:bg-custom-dark rounded-2xl shadow-xl overflow-hidden border border-green-200 dark:border-green-800">
+      <div class="bg-gradient-to-l from-green-500 to-emerald-600 p-6 text-center">
+        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-4xl" aria-hidden="true">✓</div>
+        <h1 class="text-2xl font-black text-white">پرداخت موفق</h1>
+        <p class="text-green-100 mt-2">پرداخت شما تأیید شد و سفارش ثبت نهایی گردید.</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+        {% if order %}
+        <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 space-y-3">
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">شماره سفارش:</span><strong dir="ltr" class="text-gray-800 dark:text-white">{{ order.order_number }}</strong></div>
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">شماره پیگیری پرداخت:</span><strong dir="ltr" class="text-gray-800 dark:text-white">{{ payment.ref_id }}</strong></div>
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">مبلغ پرداختی:</span><strong class="text-gray-800 dark:text-white">{{ payment.amount|floatformat:"0g" }} تومان</strong></div>
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">زمان ثبت پرداخت:</span><strong class="text-gray-800 dark:text-white">{{ payment_date|date:"Y/m/d - H:i" }}</strong></div>
+        </div>
+
+        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+          <h2 class="font-bold text-gray-800 dark:text-white mb-3">محصولات سفارش</h2>
+          <div class="space-y-3">
+            {% for item in order_items %}
+            <div class="flex justify-between gap-4 text-sm border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
+              <div><strong class="text-gray-800 dark:text-white">{{ item.product_name }}</strong><p class="text-gray-600 dark:text-gray-400 mt-1">رنگ: {{ item.color }} | تعداد: {{ item.quantity }}</p></div>
+              <span class="text-gray-800 dark:text-white shrink-0">{{ item.total_price|floatformat:"0g" }} تومان</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-200">سفارش شما پرداخت شده و برای پردازش آماده است. هزینهٔ ارسال، طبق روش انتخابی، هنگام تحویل پرداخت می‌شود.</div>
+        {% else %}
+        <p class="text-center text-gray-700 dark:text-gray-300">پرداخت تأیید شد. برای دیدن جزئیات سفارش، وارد حساب کاربری خود شوید.</p>
+        <a href="{% url 'storefront:login' %}" class="w-full border border-green-600 text-green-700 dark:text-green-300 font-medium py-3 px-4 rounded-lg flex items-center justify-center">ورود به حساب کاربری</a>
+        {% endif %}
+        <a href="{% url 'storefront:home' %}" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">بازگشت به فروشگاه</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

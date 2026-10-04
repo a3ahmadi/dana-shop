@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from . import settings
 from django.conf.urls.static import static
+from payment.views import PaymentStartFailureView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('payment/fail/<int:order_id>/', PaymentStartFailureView.as_view(), name='payment-start-failed'),
 
     # API
     path('api/v1/accounts/', include('accounts.urls')),

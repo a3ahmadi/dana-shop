@@ -1,0 +1,45 @@
+{% extends "storefront/base.html" %}
+{% block title %}نتیجه پرداخت | دانا شاپ{% endblock %}
+{% block content %}
+<section class="py-8" id="failPaymentPage">
+  <div class="container">
+    <div class="timeline-horizontal mb-8 flex items-center justify-between" aria-label="مراحل خرید">
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">سبد خرید</div></div>
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">جزئیات سفارش</div></div>
+      <div class="timeline-step completed flex flex-col items-center text-center"><div class="timeline-icon">✓</div><div class="timeline-title">تأیید</div></div>
+      <div class="timeline-step active flex flex-col items-center text-center" aria-current="step"><div class="timeline-icon">۴</div><div class="timeline-title">تکمیل</div></div>
+    </div>
+
+    <div class="max-w-xl w-full mx-auto bg-white dark:bg-custom-dark rounded-2xl shadow-xl overflow-hidden border border-red-200 dark:border-red-800">
+      <div class="bg-gradient-to-l from-red-500 to-rose-600 p-6 text-center">
+        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-4xl" aria-hidden="true">!</div>
+        <h1 class="text-2xl font-black text-white">{% if uncertain %}تأیید پرداخت کامل نشد{% else %}پرداخت ناموفق{% endif %}</h1>
+        <p class="text-red-100 mt-2">{% if uncertain %}وضعیت تراکنش نیاز به بررسی دارد.{% else %}سفارش هنوز پرداخت نشده است.{% endif %}</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
+          <h2 class="font-bold text-gray-800 dark:text-white mb-2">علت یا وضعیت پرداخت</h2>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ message }}</p>
+        </div>
+
+        {% if order %}
+        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">شماره سفارش:</span><strong dir="ltr" class="text-gray-800 dark:text-white">{{ order.order_number }}</strong></div>
+          <div class="flex justify-between gap-4"><span class="text-gray-600 dark:text-gray-300">مبلغ سفارش:</span><strong class="text-gray-800 dark:text-white">{{ order.total_price|floatformat:"0g" }} تومان</strong></div>
+          <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-2">
+            {% for item in order_items %}<p class="text-sm text-gray-700 dark:text-gray-300">{{ item.product_name }}، {{ item.color }}، {{ item.quantity }} عدد</p>{% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="flex flex-col gap-3">
+          {% if retry %}<a href="{% url 'storefront:accept' %}" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">تلاش مجدد برای پرداخت</a>{% endif %}
+          <a href="{% url 'storefront:cart' %}" class="w-full bg-primary hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">بازگشت به سبد خرید</a>
+          <a href="{% url 'storefront:home' %}" class="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium py-3 px-4 rounded-lg flex items-center justify-center">بازگشت به فروشگاه</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

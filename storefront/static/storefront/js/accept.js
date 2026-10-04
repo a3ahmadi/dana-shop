@@ -34,21 +34,23 @@
         if (button.disabled) return;
         button.disabled = true;
         status.textContent = "در حال آماده‌سازی پرداخت…";
-        let orderCreated = false;
+        let orderId = null;
         try {
             const orderResponse = await post("/api/v1/orders/create/", {
                 address_id: Number(form.dataset.addressId),
                 shipping_method: form.dataset.shippingMethod,
             });
-            orderCreated = true;
+            orderId = orderResponse.order.id;
             const paymentResponse = await post("/api/v1/payments/create/", {order_id: orderResponse.order.id});
             const paymentUrl = new URL(paymentResponse.payment.payment_url);
             if (paymentUrl.protocol !== "https:") throw new Error("نشانی درگاه پرداخت معتبر نیست.");
             window.location.assign(paymentUrl.href);
         } catch (error) {
-            status.textContent = orderCreated
-                ? `سفارش در انتظار پرداخت ثبت شد، اما اتصال به درگاه انجام نشد: ${error.message}`
-                : error.message;
+            if (orderId) {
+                window.location.assign(`/payment/fail/${orderId}/`);
+                return;
+            }
+            status.textContent = error.message;
             button.disabled = false;
         }
     });
