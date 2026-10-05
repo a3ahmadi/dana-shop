@@ -1,59 +1,35 @@
-{% load static %}
-
-<!-- NAV MOBILE -->
-<nav id="navMenuMobile"
-     class="fixed lg:hidden block bottom-0 end-0 start-0 z-30 py-2 px-2 rounded-t-[30px] overflow-hidden bg-custom-light dark:bg-custom-dark before:content-[''] before:absolute before:top-0 before:right-0 before:w-full before:h-full before:opacity-30">
-    <div class="flex justify-around items-baseline relative text-white dark:text-gray-100">
-        <!-- Home -->
-        <a href="{% url 'storefront:home' %}" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
-            <div class="w-[50px] h-[50px] flex items-center justify-center rounded-full mb-1 bg-primary dark:bg-[rgba(255,255,255,0.05)] transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="currentColor"
-                          d="M4 19v-9q0-.475.213-.9t.587-.7l6-4.5q.525-.4 1.2-.4t1.2.4l6 4.5q.375.275.588.7T20 10v9q0 .825-.588 1.413T18 21h-3q-.425 0-.712-.288T14 20v-5q0-.425-.288-.712T13 14h-2q-.425 0-.712.288T10 15v5q0 .425-.288.713T9 21H6q-.825 0-1.412-.587T4 19"/>
-                </svg>
-            </div>
+{% with current_page=request.resolver_match.url_name %}
+<nav id="navMenuMobile" class="mobile-dock" aria-label="منوی پایین موبایل">
+    <div class="mobile-dock-items">
+        <a href="{% url 'storefront:home' %}" class="mobile-dock-item"{% if current_page == 'home' %} aria-current="page"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>
+            <span class="mobile-dock-label">خانه</span>
         </a>
 
-        <!-- Search -->
-        <a id="mobileSearchButton" href="#catalogSearchInput" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
-            <div class="w-[50px] h-[50px] flex items-center justify-center rounded-full mb-1 bg-primary dark:bg-[rgba(255,255,255,0.05)] transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="currentColor"
-                          d="m19.485 20.154l-6.262-6.262q-.75.639-1.725.989t-1.96.35q-2.402 0-4.066-1.663T3.808 9.503T5.47 5.436t4.064-1.667t4.068 1.664T15.268 9.5q0 1.042-.369 2.017t-.97 1.668l6.262 6.261z"/>
-                </svg>
-            </div>
+        <a id="mobileSearchButton" href="#catalogSearchInput" class="mobile-dock-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 4.5 4.5"/></svg>
+            <span class="mobile-dock-label">جستجو</span>
         </a>
 
-        <!--Central button-->
-        <div class="flex flex-col items-center relative">
-            <button onclick="scrollToTop(event)"
-                    class="w-[70px] h-[70px] bg-[linear-gradient(135deg,#D4AF37_0%,#F1C40F_100%)] dark:bg-[linear-gradient(135deg,#FFD700_0%,#B8860B_100%)] text-white rounded-full border-4 border-white/80 dark:border-gray-800 flex items-center justify-center mt-[-35px] shadow-[0_5px_20px_rgba(212,175,55,0.5)] active:scale-95 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M11 18V8.8l-3.6 3.6L6 11l6-6l6 6l-1.4 1.4L13 8.8V18z"/>
-                </svg>
-            </button>
-        </div>
+        <button type="button" onclick="scrollToTop(event)" class="mobile-dock-item mobile-dock-top" aria-label="بازگشت به بالای صفحه">
+            <span class="mobile-dock-top-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>
+            </span>
+            <span class="mobile-dock-label">بالا</span>
+        </button>
 
-        <!--Shopping Cart-->
-        <a href="{% url 'storefront:cart' %}" aria-label="مشاهده سبد خرید" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
-            <div class="w-[50px] h-[50px] flex items-center justify-center rounded-full mb-1 bg-primary dark:bg-[rgba(255,255,255,0.05)] relative">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="currentColor"
-                          d="M22 9h-4.79l-4.39-6.57a1 1 0 0 0-1.66 0L6.77 9H2c-.55 0-1 .45-1 1c0 .09.01.18.04.27l2.54 9.27c.23.84 1 1.46 1.92 1.46h13c.92 0 1.69-.62 1.93-1.46l2.54-9.27L23 10c0-.55-.45-1-1-1M11.99 4.79L14.8 9H9.18zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2"/>
-                </svg>
-                <span class="absolute top-[5px] end-[5px] bg-secondary text-white w-[20px] h-[20px] text-[12px] font-bold flex items-center justify-center rounded-full" data-cart-count>0</span>
-            </div>
+        <a href="{% url 'storefront:cart' %}" class="mobile-dock-item" aria-label="مشاهده سبد خرید"{% if current_page == 'cart' %} aria-current="page"{% endif %}>
+            <span class="mobile-dock-cart-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg>
+                <span class="mobile-dock-badge" data-cart-count>0</span>
+            </span>
+            <span class="mobile-dock-label">سبد خرید</span>
         </a>
 
-        <!-- Profile -->
-        <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}" aria-label="حساب کاربری" class="flex flex-col items-center px-2 py-3 rounded-[15px] transition-all duration-300 relative">
-            <div class="w-[50px] h-[50px] flex items-center justify-center rounded-full mb-1 bg-primary dark:bg-[rgba(255,255,255,0.05)] transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
-                    <path fill="currentColor"
-                          d="M12 12q-1.65 0-2.825-1.175T8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12m-8 8v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z"/>
-                </svg>
-            </div>
+        <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}" class="mobile-dock-item"{% if current_page == 'panel' or current_page == 'login' %} aria-current="page"{% elif current_page == 'panel_order_detail' %} aria-current="location"{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg>
+            <span class="mobile-dock-label">حساب من</span>
         </a>
     </div>
 </nav>
-<!-- END NAV MOBILE -->
+{% endwith %}

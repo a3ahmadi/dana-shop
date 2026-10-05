@@ -6,32 +6,30 @@
 
     <div class="container">
         <!-- row top header -->
-        <div class="grid place-items-center gap-3 grid-cols-12">
-            <!-- respnsive menu -->
-            <div class="xl:hidden col-span-4 w-full">
-                <a href="javascript:void(0)" onclick="toggleOffcanvas('offcanvas-right')">
+        <div class="header-top-row grid place-items-center gap-3 grid-cols-12">
+            <!-- responsive menu -->
+            <div class="header-menu-slot xl:hidden col-span-4 w-full">
+                <button type="button" class="header-menu-button" onclick="toggleOffcanvas('offcanvas-right')" aria-label="باز کردن منو">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-6 dark:text-white">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"/>
                     </svg>
-                </a>
+                </button>
             </div>
-            <!-- logo -->
-            <div class="xl:col-span-2 xl:order-1 order-2 col-span-4 w-full">
-                <a href="{% url 'storefront:home' %}">
-                    <div class="xl:text-start text-center flex items-center xl:justify-start justify-center">
-                        <img class="h-12 w-12 object-contain" src="{% static 'storefront/assets/images/dana-logo.png' %}" alt="دانا شاپ">
-                    </div>
+            <!-- typographic store name -->
+            <div class="header-brand-slot xl:col-span-2 xl:order-1 order-2 col-span-4 w-full">
+                <a href="{% url 'storefront:home' %}" class="header-wordmark" aria-label="دانا شاپ، صفحه اصلی">
+                    <span>دانا</span><span>شاپ</span>
                 </a>
             </div>
             <!-- search and filter -->
-            <div class="xl:col-span-6 xl:order-2 order-4 col-span-12 w-full">
+            <div class="header-search-slot xl:col-span-6 xl:order-2 order-4 col-span-12 w-full">
                 <div class="flex items-center w-full justify-between">
                     <!-- search -->
                     <div class="flex w-full items-center">
                         <!--Search component-->
-                        <form id="catalogSearchForm" method="get" action="{% url 'storefront:products' %}" class="relative flex items-center w-full" role="search">
+                        <form id="catalogSearchForm" method="get" action="{% url 'storefront:products' %}" class="header-search-form relative flex items-center w-full" role="search">
                             <input type="search" name="search" id="catalogSearchInput" autocomplete="off" aria-controls="catalogSearchResults" aria-expanded="false"
                                    class="w-full appearance-none rounded-xl border border-gray-300 dark:border-gray-700 py-3 ps-4 pe-10 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-custom-dark text-gray-900 dark:text-gray-100 transition-colors duration-300"
                                    placeholder="جستجوی محصولات ...."/>
@@ -52,21 +50,12 @@
                     </div>
                 </div>
             </div>
-            <!-- login and basket and favorite and dark mode -->
-            <div class="xl:col-span-4 col-span-4 order-3 w-full">
-                <div class="flex items-baseline justify-end">
-                    <!-- basket and call and darkmode -->
-                    <div class="flex items-baseline md:me-5 me-2">
-                        <!-- heart -->
-                        <a href="" class="xl:block hidden">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
-                            </svg>
-                        </a>
+            <!-- login, basket and dark mode -->
+            <div class="header-actions-slot xl:col-span-4 col-span-4 order-3 w-full">
+                <div class="header-actions">
+                    <div class="header-tools">
                         <!-- basket -->
-                        <a href="{% url 'storefront:cart' %}" aria-label="مشاهده سبد خرید" class="relative md:ms-5 ms-2 flex">
+                        <a href="{% url 'storefront:cart' %}" aria-label="مشاهده سبد خرید" class="header-cart-button header-icon-button relative flex">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -76,8 +65,8 @@
                                     class="size-4 text-sm -top-2 -start-2 absolute bg-secondary dark:bg-primary-400 text-white dark:text-gray-100 rounded-lg text-center shadow-sm dark:shadow-[0_0_4px_rgba(255,255,255,0.2)] transition-colors duration-300" data-cart-count>0</span>
                         </a>
                         <!-- dark mode -->
-                        <div class="md:ms-5 ms-2">
-                            <button id="dark-mode-toggle">
+                        <div>
+                            <button id="dark-mode-toggle" type="button" class="header-icon-button" aria-label="تغییر حالت روشن و تاریک">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                      stroke-width="1.5" stroke="currentColor"
                                      class="size-6 dark:block hidden dark:text-white">
@@ -93,11 +82,12 @@
                             </button>
                         </div>
                     </div>
-                    <div class="xl:inline-block hidden me-3 h-10 w-px self-stretch bg-gray-200 dark:bg-gray-700">
+                    <div class="xl:inline-block hidden h-10 w-px bg-gray-200 dark:bg-gray-700">
                     </div>
                     <!-- login -->
                     <a href="{% if request.user.is_authenticated %}{% url 'storefront:panel' %}{% else %}{% url 'storefront:login' %}{% endif %}"
-                       class="bg-white dark:bg-custom-dark text-gray-900 dark:text-gray-100 flex xl:py-2 xl:px-3 xl:border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1f242c] transition-colors duration-200">
+                       aria-label="{% if request.user.is_authenticated %}حساب کاربری{% else %}ورود / ثبت نام{% endif %}"
+                       class="header-account bg-white dark:bg-custom-dark text-gray-900 dark:text-gray-100 flex xl:py-2 xl:px-3 xl:border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1f242c] transition-colors duration-200">
 
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="xl:size-6 lg:me-2 size-7">
@@ -110,48 +100,53 @@
             </div>
         </div>
 
-        <!-- simple navigation: mega menu removed -->
-        <div class="xl:grid gap-y-0 hidden relative grid-cols-12">
-            <div class="col-span-10 place-self-start">
-                <nav class="flex gap-x-9 mt-10 items-center" aria-label="منوی اصلی">
-                    <ul class="flex dark:text-white items-center gap-x-8 tracking-tight">
-                        <li>
-                            <a href="{% url 'storefront:home' %}" class="flex items-center gap-2 hover:text-primary transition">
-                                <span>صفحه اصلی</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/products/" class="flex items-center gap-2 hover:text-primary transition">
-                                <span>محصولات</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/#categories" class="flex items-center gap-2 hover:text-primary transition">
-                                <span>دسته‌بندی‌ها</span>
-                            </a>
-                        </li>
-                        {% if request.user.is_authenticated %}<li><a href="{% url 'storefront:panel' %}?tab=orders" class="flex items-center gap-2 hover:text-primary transition"><span>سفارش‌های من</span></a></li>{% endif %}
-                        <li>
-                            <a href="/#site-footer" class="flex items-center gap-2 hover:text-primary transition">
-                                <span>تماس با ما</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            <div class="col-span-2 place-self-end place-items-center">
-                <div class="text-end">
-                    <a href="tel:091212345678"
-                       class="flex hover:bg-primary-600 transition items-center text-white bg-primary p-3 rounded-3xl text-sm gap-2">
-                        <span>091212345678</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor" class="size-5">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
+        <div class="header-navigation">
+            <nav aria-label="منوی اصلی">
+                <ul class="header-nav-list">
+                    <li>
+                        <a href="{% url 'storefront:home' %}" class="header-nav-link">
+                            <span class="nav-sticker nav-sticker-home" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-8h6v8"/></svg>
+                            </span>
+                            <span>صفحه اصلی</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/products/" class="header-nav-link">
+                            <span class="nav-sticker nav-sticker-products" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2M9 13c0 4 6 4 6 0"/></svg>
+                            </span>
+                            <span>محصولات</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/#categories" class="header-nav-link">
+                            <span class="nav-sticker nav-sticker-categories" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 2v9M13 6.5h9"/></svg>
+                            </span>
+                            <span>دسته‌بندی‌ها</span>
+                        </a>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                    <li>
+                        <a href="{% url 'storefront:panel' %}?tab=orders" class="header-nav-link">
+                            <span class="nav-sticker nav-sticker-orders" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5v9l-9 5-9-5V8l9-5ZM3 8l9 5 9-5M12 13v9M7.5 5.5l9 5V15"/></svg>
+                            </span>
+                            <span>سفارش‌های من</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="/#site-footer" class="header-nav-link">
+                            <span class="nav-sticker nav-sticker-contact" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 0 1 19 0Z"/><path d="M7 11h.01M12 11h.01M17 11h.01" stroke-width="3"/></svg>
+                            </span>
+                            <span>تماس با ما</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </header>
